@@ -24,7 +24,7 @@ public partial class App : Application
         {
             string? url = null, fileName = null, referrer = null, mediaQuality = null;
             List<string>? segmentUrls = null;
-            string? cookieHeader = null, pendingPath = null;
+            string? cookieHeader = null, pendingPath = null, userAgent = null;
             string dataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Flugel Download Manager");
             bool explicitDirectory = false, smoke = false;
             for (int i = 0; i < e.Args.Length; i++)
@@ -84,6 +84,7 @@ public partial class App : Application
                     referrer = Str("Referrer") ?? referrer;
                     mediaQuality = Str("MediaQuality") ?? mediaQuality;
                     cookieHeader = Str("CookieHeader");
+                    userAgent = Str("UserAgent");
                     if (root.TryGetProperty("SegmentUrls", out var seg) && seg.ValueKind == System.Text.Json.JsonValueKind.Array)
                         segmentUrls = seg.EnumerateArray().Select(x => x.GetString() ?? "").Where(x => x.Length > 0).ToList();
                 }
@@ -94,14 +95,14 @@ public partial class App : Application
             }
 
             // Single instance: hand the request to the running app and exit quietly instead of failing on locked data.
-            if (!smoke && TryForwardToRunningInstance(dataDirectory, url, fileName, referrer, mediaQuality, segmentUrls, cookieHeader))
+            if (!smoke && TryForwardToRunningInstance(dataDirectory, url, fileName, referrer, mediaQuality, segmentUrls, cookieHeader, userAgent))
             {
                 Shutdown(0);
                 return;
             }
 
             var manager = new DownloadManager(dataDirectory);
-            var window = new MainWindow(manager, dataDirectory, url, fileName, referrer, mediaQuality, segmentUrls, smoke, cookieHeader);
+            var window = new MainWindow(manager, dataDirectory, url, fileName, referrer, mediaQuality, segmentUrls, smoke, cookieHeader, userAgent);
             MainWin = window;
             MainWindow = window;
             window.Show();
@@ -134,14 +135,14 @@ public partial class App : Application
     }
 
     private static bool TryForwardToRunningInstance(string dataDirectory, string? url, string? fileName, string? referrer,
-        string? mediaQuality, List<string>? segmentUrls, string? cookieHeader)
+        string? mediaQuality, List<string>? segmentUrls, string? cookieHeader, string? userAgent)
     {
         var request = url is null
             ? new IpcRequestMessage { Action = "activate" }
             : new IpcRequestMessage
             {
                 Action = "enqueue-media", Url = url, FileName = fileName, Referrer = referrer,
-                MediaQuality = mediaQuality, SegmentUrls = segmentUrls, CookieHeader = cookieHeader
+                MediaQuality = mediaQuality, SegmentUrls = segmentUrls, CookieHeader = cookieHeader, UserAgent = userAgent
             };
         // Any reply, including "desktop-busy", means a running instance owns the request; do not start a second app.
         var reply = SingleInstanceIpc.TrySendAsync(dataDirectory, request, 1500).GetAwaiter().GetResult();
@@ -186,6 +187,7 @@ public partial class App : Application
                     MediaQualityLabel = req.MediaQuality,
                     MediaSegmentUrls = req.SegmentUrls,
                     CookieHeader = req.CookieHeader,
+                    UserAgent = req.UserAgent,
                     StartImmediately = true
                 }) == true;
                 if (!accepted) resp.Status = "desktop-busy";

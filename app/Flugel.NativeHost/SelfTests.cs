@@ -209,6 +209,17 @@ internal static class SelfTests
                     version = 1, action = "enqueue-media", url = "https://nuvem.example.test/a.mkv", cookie = "novalue"
                 })));
             });
+            Check("browser user agent validated on media requests only", () =>
+            {
+                byte[] RequestWithAgent(string action, string agent) => JsonSerializer.SerializeToUtf8Bytes(new
+                {
+                    version = 1, action, url = "https://example.test/file", userAgent = agent
+                });
+                Assert(Program.ParseStructuredRequest(RequestWithAgent("enqueue-media", "BrowserTest/1.0")).UserAgent == "BrowserTest/1.0");
+                Reject(() => Program.ParseStructuredRequest(RequestWithAgent("enqueue", "BrowserTest/1.0")));
+                foreach (var agent in new[] { "", "x\r\nInjected: 1", new string('x', 2049) })
+                    Reject(() => Program.ParseStructuredRequest(RequestWithAgent("enqueue-media", agent)));
+            });
             Console.WriteLine($"PASS {count} self-tests; no desktop launched.");
             return 0;
         }

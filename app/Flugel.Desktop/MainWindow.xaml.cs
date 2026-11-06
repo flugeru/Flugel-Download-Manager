@@ -44,7 +44,7 @@ public partial class MainWindow : Window
     internal DownloadManager Manager => _manager;
 
     internal MainWindow(DownloadManager manager, string dataDirectory, string? initialUrl, string? initialFileName,
-        string? initialReferrer, string? initialMediaQuality, List<string>? initialSegments, bool smoke, string? initialCookie = null)
+        string? initialReferrer, string? initialMediaQuality, List<string>? initialSegments, bool smoke, string? initialCookie = null, string? initialUserAgent = null)
     {
         _manager = manager;
         _view = CollectionViewSource.GetDefaultView(_rows);
@@ -69,7 +69,8 @@ public partial class MainWindow : Window
                     Referrer = initialReferrer,
                     MediaQualityLabel = initialMediaQuality,
                     MediaSegmentUrls = initialSegments,
-                    CookieHeader = initialCookie,
+                CookieHeader = initialCookie,
+                UserAgent = initialUserAgent,
 StartImmediately = true
                 });
         };

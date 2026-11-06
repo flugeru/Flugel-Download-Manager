@@ -22,7 +22,7 @@ const chrome = {
   action: { setBadgeText() {}, setBadgeBackgroundColor() {}, setTitle() {} },
   contextMenus: { onClicked: event },
   tabs: { onRemoved: event, onUpdated: event, async query() { return [activeTab]; } },
-  webRequest: { onBeforeRequest: event, onHeadersReceived: event },
+webRequest: { onBeforeRequest: event, onHeadersReceived: event, onBeforeSendHeaders: event },
   downloads: {
     onCreated: event,
     async pause(id) { downloadCalls.push(['pause', id]); if (pauseFails) throw Error('already complete'); },
@@ -46,7 +46,7 @@ const chrome = {
     }
   }
 };
-const context = vm.createContext({ chrome, TextEncoder, URL, decodeURIComponent, Number, Object, Map, Array, String });
+const context = vm.createContext({ chrome, TextEncoder, URL, decodeURIComponent, Number, Object, Map, Array, String, Date });
 vm.runInContext(fs.readFileSync(path.join(__dirname, 'extension/service-worker.js'), 'utf8'), context);
 
 const nuvem = 'https://nuvem.anitsu.moe/api/download?path=Animes%2FLetra%20Y%2FYoujo%20Senki%2F%5B2026%5D%20Youjo%20Senki%20II%2F%5BAnitsu%5D%20Youjo%20Senki%20S2%20-%20%5BWEB%20DUAL%201080p%20HEVC%5D%2F%5BAnitsu%5D%20Youjo%20Senki%20S2%20-%2008%20%5BWEB%20DUAL%201080p%20HEVC%5D.mkv';
@@ -58,11 +58,14 @@ const nuvem = 'https://nuvem.anitsu.moe/api/download?path=Animes%2FLetra%20Y%2FY
   assert.equal(context.mediaNameFromUrl('https://example.test/watch?id=7'), null);
   assert.equal(context.mediaNameFromUrl('https://example.test/page.html'), null);
   assert.equal(context.typedName('https://example.test/api/download', 'video/x-matroska'), 'download.mkv');
-  context.recordMedia(7, { url: nuvem, fileName: 'episode.mkv' });
+await context.recordMedia(7, { url: nuvem, fileName: 'episode.mkv' });
   const message = (msg, sender = {}) => new Promise(resolve => listener(msg, sender, resolve));
   assert.equal((await message({ type: 'get-page-media' })).media.length, 1);
-  vm.runInContext('tabMedia.clear()', context);
-  assert.equal((await message({ type: 'get-page-media' })).media.length, 1, 'worker suspension lost detected media');
+vm.runInContext('tabMedia.clear(); mediaReady.clear()', context);
+assert.equal((await message({ type: 'get-page-media' })).media.length, 1, 'worker suspension lost detected media');
+await context.recordMedia(7, { url: 'https://example.test/new.mp4', fileName: 'new.mp4' });
+assert.equal(session['media:7'].length, 2, 'first write after suspension discarded existing metadata');
+assert.equal(session['media:7'].some(m => m.url === nuvem), true);
   assert.equal((await message({ type: 'get-page-media' }, { tab: { id: 8 } })).media.length, 0);
   assert.equal((await message({ type: 'enqueue-detected-media', url: 'https://unknown.test/' })).error, 'media-not-found');
 
@@ -110,14 +113,39 @@ const nuvem = 'https://nuvem.anitsu.moe/api/download?path=Animes%2FLetra%20Y%2FY
   // Automatic takeover cancels only after acceptance and restores on host failure.
   const item = { id: 99, url: nuvem, referrer: activeTab.url, state: 'in_progress', filename: 'C:\\Downloads\\episode.mkv' };
   nativeError = undefined;
-  storedFlags = { autoIntercept: true, 'cookies:anitsu.moe': true };
+storedFlags = { autoIntercept: true, 'cookies:anitsu.moe': true };
+context.observeRequest({ url: nuvem, method: 'GET' });
   requests.length = 0;
   downloadCalls.length = 0;
   await context.interceptDownload(item);
   assert.deepEqual(downloadCalls, [['pause', 99], ['cancel', 99]]);
   assert.equal(requests.find(r => r.action).url, nuvem);
-  assert.equal(requests.find(r => r.action).cookie, 'session=abc; lang=pt');
-  nativeError = 'Specified native messaging host not found.';
+assert.equal(requests.find(r => r.action).cookie, 'session=abc; lang=pt');
+// Final redirect URL and browser filename win; User-Agent comes only from observed headers.
+const finalUrl = 'https://cdn.example.test/download';
+context.observeRequest({ url: finalUrl, method: 'GET', requestHeaders: [{ name: 'User-Agent', value: 'BrowserTest/1.0' }] });
+requests.length = 0;
+await context.interceptDownload({ ...item, finalUrl, filename: 'C:\\Downloads\\server-name.zip' });
+assert.equal(requests.find(r => r.action).url, finalUrl);
+assert.equal(requests.find(r => r.action).fileName, 'server-name.zip');
+assert.equal(requests.find(r => r.action).userAgent, 'BrowserTest/1.0');
+// POST is not silently replayed as GET. Do not pause/cancel its original browser copy.
+context.observeRequest({ url: finalUrl, method: 'POST' });
+downloadCalls.length = 0;
+requests.length = 0;
+await context.interceptDownload({ ...item, finalUrl });
+assert.equal(downloadCalls.length, 0);
+assert.equal(requests.length, 0);
+context.observeRequest({ url: finalUrl, method: 'GET' });
+await context.interceptDownload({ ...item, finalUrl });
+assert.equal(downloadCalls.length, 0, 'mixed methods at one URL must not replay as GET');
+assert.equal((await send({ url: finalUrl })).error, 'unsupported-request-method');
+vm.runInContext('requestContext.clear()', context);
+downloadCalls.length = 0;
+await context.interceptDownload(item);
+assert.equal(downloadCalls.length, 0, 'unknown method after worker restart must remain in browser');
+context.observeRequest({ url: nuvem, method: 'GET' });
+nativeError = 'Specified native messaging host not found.';
   downloadCalls.length = 0;
   await context.interceptDownload(item);
   assert.deepEqual(downloadCalls, [['pause', 99], ['resume', 99]]);
@@ -162,5 +190,5 @@ const nuvem = 'https://nuvem.anitsu.moe/api/download?path=Animes%2FLetra%20Y%2FY
       assert.notEqual(reply.error, 'invalid-request');
     }
   }
-  console.log('PASS media naming, per-site cookies, popup submission, MV3 suspension, strict schema, automatic takeover and browser fallback');
+console.log('PASS media naming, per-site cookies, popup submission, MV3 suspension, strict schema, automatic takeover and browser fallback');
 })().catch(error => { console.error(error); process.exitCode = 1; });

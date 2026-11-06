@@ -12,6 +12,24 @@ const MAX_PER_TAB = 60;
 const MEDIA_EXT = /\.(mp4|m4v|mkv|webm|mov|avi|flv|f4v|wmv|mpg|mpeg|ts|m2ts|3gp|ogv|mka|m3u8|mpd|mp3|m4a|flac|aac|ogg|opus|wav)$/i;
 const MEDIA_TYPE = /^(video|audio)\/|^application\/(x-matroska|vnd\.apple\.mpegurl|dash\+xml|x-mpegurl)/i;
 const tabMedia = new Map(); // tabId -> Map(url -> meta)
+const mediaReady = new Map();
+const requestContext = new Map(); // Short-lived method/User-Agent only; never bodies or credentials.
+
+function observeRequest(details) {
+const url = cleanUrl(details.url);
+if (!url || details.incognito) return;
+const previous = requestContext.get(url);
+const userAgent = details.requestHeaders?.find(h => h.name.toLowerCase() === "user-agent")?.value;
+requestContext.delete(url);
+requestContext.set(url, { method: details.method, userAgent: userAgent || previous?.userAgent,
+  blocked: (previous && Date.now() - previous.at < 30000 && previous.blocked) || details.method !== "GET", at: Date.now() });
+while (requestContext.size > 256) requestContext.delete(requestContext.keys().next().value);
+}
+
+function contextFor(url) {
+const entry = requestContext.get(url);
+return entry && Date.now() - entry.at < 30000 ? entry : null;
+}
 
 function badge(ok, title) {
   try {
@@ -72,25 +90,37 @@ function hostOf(url) {
   try { return new URL(url).hostname.toLowerCase(); } catch { return null; }
 }
 
-function recordMedia(tabId, meta) {
-  if (tabId < 0) return;
-  let map = tabMedia.get(tabId);
+async function recordMedia(tabId, meta) {
+if (tabId < 0) return;
+const restoring = mediaForTab(tabId);
+const generation = mediaReady.get(tabId);
+await restoring;
+if (generation !== mediaReady.get(tabId)) return;
+let map = tabMedia.get(tabId);
   if (!map) { map = new Map(); tabMedia.set(tabId, map); }
   map.set(meta.url, meta);
 while (map.size > MAX_PER_TAB) map.delete(map.keys().next().value);
 // MV3 workers suspend between popup actions; keep metadata in browser-session memory only.
-chrome.storage.session.set({ ["media:" + tabId]: [...map.values()] }).catch(() => {});
+await chrome.storage.session.set({ ["media:" + tabId]: [...map.values()] }).catch(() => {});
 }
 
 async function mediaForTab(tabId) {
 const map = tabMedia.get(tabId);
 if (map) return [...map.values()];
-const stored = await chrome.storage.session.get("media:" + tabId);
-return stored["media:" + tabId] || [];
+if (!mediaReady.has(tabId)) {
+const ready = chrome.storage.session.get("media:" + tabId).then(stored => {
+if (mediaReady.get(tabId) !== ready) return; // Tab navigated while restoring.
+tabMedia.set(tabId, new Map((stored["media:" + tabId] || []).map(m => [m.url, m])));
+});
+mediaReady.set(tabId, ready);
+}
+await mediaReady.get(tabId);
+return [...(tabMedia.get(tabId)?.values() || [])];
 }
 
 function clearTabMedia(tabId) {
 tabMedia.delete(tabId);
+mediaReady.delete(tabId);
 chrome.storage.session.remove("media:" + tabId).catch(() => {});
 }
 
@@ -133,13 +163,20 @@ function sendNative(request) {
 }
 
 async function enqueueLink(url, extra = {}) {
-  const clean = cleanUrl(url);
-  if (!clean) { badge(false, "Flugel Download Manager: invalid or unsafe URL"); return { ok: false, error: "invalid-url" }; }
+const clean = cleanUrl(url);
+if (!clean) { badge(false, "Flugel Download Manager: invalid or unsafe URL"); return { ok: false, error: "invalid-url" }; }
+if (contextFor(clean)?.blocked) {
+badge(false, "Flugel Download Manager: this request must continue in the browser");
+return { ok: false, error: "unsupported-request-method" };
+}
   const request = { version: 1, action: "enqueue", url: clean };
   for (const key of ["fileName", "referrer", "pageTitle", "mediaQuality"]) {
     if (typeof extra[key] === "string" && extra[key].length > 0) request[key] = extra[key];
   }
-  if (Array.isArray(extra.segmentUrls) && extra.segmentUrls.length > 0) request.segmentUrls = extra.segmentUrls;
+if (Array.isArray(extra.segmentUrls) && extra.segmentUrls.length > 0) request.segmentUrls = extra.segmentUrls;
+// Only trusted webRequest metadata supplies User-Agent, not page messages.
+const userAgent = contextFor(clean)?.userAgent;
+if (userAgent) request.userAgent = userAgent;
   const cookie = await sessionCookieHeader(clean, extra.pageUrl || extra.referrer || "").catch(() => null);
   if (cookie) request.cookie = cookie;
   if (Object.keys(request).length > 3) request.action = "enqueue-media";
@@ -168,7 +205,8 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
 // Metadata-only observation: URLs and response headers; response bodies are never read.
 try {
-  chrome.webRequest.onBeforeRequest.addListener((details) => {
+chrome.webRequest.onBeforeRequest.addListener((details) => {
+observeRequest(details);
     const url = cleanUrl(details.url);
     if (!url) return;
     const name = mediaNameFromUrl(url);
@@ -176,6 +214,11 @@ try {
     recordMedia(details.tabId, { url, label: name, format: formatOf(name), fileName: name });
   }, { urls: ["http://*/*", "https://*/*"] });
 } catch { /* webRequest unavailable; content-script detection still works. */ }
+
+try {
+chrome.webRequest.onBeforeSendHeaders.addListener(observeRequest,
+  { urls: ["http://*/*", "https://*/*"] }, ["requestHeaders"]);
+} catch { /* Request context is optional when permission is denied. */ }
 
 try {
   chrome.webRequest.onHeadersReceived.addListener((details) => {
@@ -216,8 +259,12 @@ chrome.tabs.onUpdated.addListener((tabId, info) => { if (info.status === "loadin
 // Pause first, cancel only after desktop acceptance; otherwise restore the browser.
 async function interceptDownload(item) {
 if (item.state !== "in_progress" || item.paused || item.byExtensionId || item.incognito) return;
-const url = cleanUrl(item.url);
+const originalUrl = cleanUrl(item.url);
+const url = cleanUrl(item.finalUrl) || originalUrl;
 if (!url) return; // blob/data downloads cannot be fetched independently by the desktop.
+// ponytail: POST/body replay is not implemented; unknown or ambiguous methods stay in the browser.
+const observed = contextFor(url);
+if (!observed || observed.blocked || contextFor(originalUrl)?.blocked) return;
 const pageUrl = cleanUrl(item.referrer) || url;
 let paused = false;
 try {
@@ -225,7 +272,7 @@ const flags = await chrome.storage.local.get(["globalEnabled", "autoIntercept", 
 if (flags.globalEnabled === false || flags.autoIntercept !== true || flags["site:" + hostOf(pageUrl)] === false) return;
 await chrome.downloads.pause(item.id);
 paused = true;
-const fileName = mediaNameFromUrl(url) || item.filename?.split(/[\\/]/).pop();
+const fileName = item.filename?.split(/[\\/]/).pop() || mediaNameFromUrl(url) || mediaNameFromUrl(originalUrl);
 const result = await enqueueLink(url, { fileName, referrer: cleanUrl(item.referrer) || undefined });
 if (result.ok) {
 await chrome.downloads.cancel(item.id);

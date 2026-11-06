@@ -15,6 +15,8 @@ const output = fs.mkdtempSync(path.join(process.env.LOCALAPPDATA, 'Temp/opencode
 const downloads = path.join(output, 'downloads');
 fs.mkdirSync(downloads);
 const intercept = process.env.FDM_INTERCEPT_TEST === '1';
+const requestContextTest = process.env.FDM_REQUEST_CONTEXT_TEST === '1';
+const browserAgent = 'FlugelBrowserFixture/1.0';
 
 const apiPath = 'Animes/Test Series/Sample Episode - 01 [WEB 1080p].mkv';
 const apiUrlPath = '/api/download?path=' + encodeURIComponent(apiPath);
@@ -23,11 +25,16 @@ const expectedName = 'Sample Episode - 01 [WEB 1080p].mkv';
 const seen = [];
 
 const server = http.createServer((req, res) => {
-  const url = new URL(req.url, 'http://127.0.0.1');
-  if (url.pathname === '/api/download') {
+const url = new URL(req.url, 'http://127.0.0.1');
+if (requestContextTest && url.pathname === '/redirect-download') {
+res.writeHead(302, { Location: apiUrlPath });
+return res.end();
+}
+if (url.pathname === '/api/download') {
     const cookie = req.headers.cookie || '';
-    const authorized = /(^|;\s*)session=abc(;|$)/.test(cookie);
-    seen.push({ path: url.searchParams.get('path'), authorized });
+const agentMatches = req.headers['user-agent'] === browserAgent;
+const authorized = /(^|;\s*)session=abc(;|$)/.test(cookie) && (!requestContextTest || agentMatches);
+seen.push({ path: url.searchParams.get('path'), authorized, agentMatches });
     if (!authorized) {
       res.writeHead(401, { 'Content-Type': 'application/json' });
       return res.end('{"error":"unauthorized"}');
@@ -48,7 +55,7 @@ const server = http.createServer((req, res) => {
   }
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
   res.end(`<!doctype html><title>Logged-in media check</title>${intercept
-    ? `<a id="download" href="${apiUrlPath}">Download authenticated file</a>`
+? `<a id="download" href="${requestContextTest ? '/redirect-download' : apiUrlPath}">Download authenticated file</a>`
     : `<video width="640" height="360" controls src="${apiUrlPath}"></video>`}`);
 });
 
@@ -113,7 +120,8 @@ function makeCdp(ws) {
   };
 
   // The browser session: a real cookie for this origin, as a logged-in user would have.
-  await pageCdp('Network.enable');
+await pageCdp('Network.enable');
+if (requestContextTest) await pageCdp('Network.setUserAgentOverride', { userAgent: browserAgent });
   await pageCdp('Network.setCookie', { name: 'session', value: 'abc', url: base + '/' });
 
   // The user's explicit per-site permission, set through the extension's own storage.
@@ -128,7 +136,7 @@ function makeCdp(ws) {
     await evaluate(pageCdp, 'document.querySelector("#download").click()');
     let item;
     for (let i = 0; i < 100; i++) {
-      item = await evaluate(workerCdp, '(async()=> (await chrome.downloads.search({})).find(x=>x.url.includes("/api/download?")))()');
+item = await evaluate(workerCdp, '(async()=> (await chrome.downloads.search({})).find(x=>(x.finalUrl || x.url).includes("/api/download?")))()');
       if (item?.state === 'interrupted') break;
       await delay(100);
     }
@@ -176,10 +184,32 @@ function makeCdp(ws) {
   assert.ok(fs.existsSync(file), 'Logged-in media did not finish downloading');
   const hash = bytes => createHash('sha256').update(bytes).digest('hex');
   assert.equal(hash(fs.readFileSync(file)), hash(payload));
-  assert.ok(seen.some(s => s.authorized), 'Server never received the browser session cookie');
+assert.ok(seen.some(s => s.authorized), 'Server never received the browser session cookie');
+
+if (requestContextTest) {
+// A form POST must remain in the browser until desktop body replay is implemented.
+const browserDownloads = path.join(output, 'browser-post');
+fs.mkdirSync(browserDownloads);
+await pageCdp('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: browserDownloads });
+const beforePostId = await evaluate(workerCdp, '(async()=>Math.max(0,...(await chrome.downloads.search({})).map(x=>x.id)))()');
+await evaluate(pageCdp, `(() => {
+const form = document.createElement('form'); form.method = 'POST'; form.action = ${JSON.stringify(apiUrlPath)};
+document.body.append(form); form.submit();
+})()`);
+let postItem;
+for (let i = 0; i < 150; i++) {
+postItem = await evaluate(workerCdp, `(async()=> (await chrome.downloads.search({})).filter(x=>x.id>${beforePostId}).sort((a,b)=>b.id-a.id)[0])()`);
+if (postItem?.state === 'complete') break;
+assert.notEqual(postItem?.error, 'USER_CANCELED', 'POST browser copy was incorrectly cancelled');
+await delay(100);
+}
+assert.equal(postItem?.state, 'complete', 'POST fallback did not finish in browser');
+assert.equal(hash(fs.readFileSync(path.join(browserDownloads, expectedName))), hash(payload));
+}
 
   const report = {
-    passed: true, capturedAtUtc: new Date().toISOString(), browser: process.argv[2], label, automaticInterception: intercept,
+passed: true, capturedAtUtc: new Date().toISOString(), browser: process.argv[2], label, automaticInterception: intercept, requestContextTest,
+postBrowserFallbackVerified: requestContextTest,
     scope: 'Real unpacked extension, browser session cookie for a local origin with explicit per-site permission, registered native host, WPF confirmation, exact bytes. External site and codec playback not tested.',
     serverRequests: seen, fileName: expectedName, bytes: payload.length, sha256: hash(payload), evidence: output
   };

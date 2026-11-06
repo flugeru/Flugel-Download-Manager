@@ -91,6 +91,22 @@ await Check("Last-Modified validator", () => DownloadCase("modified", "modified"
 await Check("unknown chunked length", () => DownloadCase("unknown", "unknown", TestServer.NormalSize));
 await Check("empty zero bytes", () => DownloadCase("empty", "empty", 0));
 await Check("finite redirect", () => DownloadCase("redirect", "redirect", TestServer.NormalSize));
+await Check("redirect strips credentials across origins and retains them on same origin", async () =>
+{
+    await using var other = new TestServer();
+    server.RedirectTarget = other.Url("no-credentials");
+    foreach (var route in new[] { "redirect-private", "redirect-same-private" })
+    {
+        var p = Paths(route); await using var m = new DownloadManager(p.state);
+        var id = m.AddWithOptions(new AddDownloadOptions
+        {
+            Url = server.Url(route), DestinationDirectory = p.output, FileName = "redirect.bin",
+            CookieHeader = "session=fixture", BasicAuthUser = "fixture", BasicAuthPassword = "fixture",
+            UserAgent = "FlugelTest/2.0", Referrer = server.Url("portal")
+        });
+        await Verify(await Wait(m, id), TestServer.NormalSize);
+    }
+});
 await Check("dropped body retries", () => DownloadCase("drop", "drop", TestServer.NormalSize));
 await Check("503 bounded retry then success", () => DownloadCase("recover", "recover", TestServer.NormalSize));
 await Check("404 permanent failure without retries", async () =>
@@ -150,6 +166,12 @@ await Check("process kill recovers atomic checkpoint", async () =>
         while (!File.Exists(marker) && !child.HasExited && clock.Elapsed.TotalSeconds < 10) await Task.Delay(25);
         Assert(File.Exists(marker), "Child checkpoint marker missing");
         child.Kill(); await child.WaitForExitAsync();
+        var release = Stopwatch.StartNew();
+        while (true)
+        {
+            try { using var probe = File.Open(Path.Combine(p.state, "instance.lock"), FileMode.Open, FileAccess.ReadWrite, FileShare.None); break; }
+            catch (IOException) when (release.Elapsed < TimeSpan.FromSeconds(2)) { await Task.Delay(25); }
+        }
         string id = await File.ReadAllTextAsync(marker);
         await using var m = new DownloadManager(p.state);
         Assert(m.GetSnapshots().Single().State == DownloadState.Paused, "Crash job not paused");
@@ -553,7 +575,8 @@ sealed class TestServer : IAsyncDisposable
     private readonly ConcurrentBag<Task> workers = [];
     private readonly ConcurrentDictionary<string, int> counts = new();
     private readonly List<RequestInfo> requests = [];
-    public bool Changed { get; set; }
+public bool Changed { get; set; }
+public string? RedirectTarget { get; set; }
     public List<RequestInfo> Requests { get { lock (requests) return requests.ToList(); } }
     public TestServer() { listener.Start(); loop = Accept(); }
     public string Url(string path) => $"http://127.0.0.1:{((IPEndPoint)listener.LocalEndpoint).Port}/{path}";
@@ -630,7 +653,17 @@ sealed class TestServer : IAsyncDisposable
                     return;
                 }
             }
-            if (path == "redirect") { await Head(302, "Location: " + Url("range-redirect") + "\r\nContent-Length: 0\r\n"); return; }
+if (path == "redirect") { await Head(302, "Location: " + Url("range-redirect") + "\r\nContent-Length: 0\r\n"); return; }
+if (path is "redirect-private" or "redirect-same-private")
+{
+    await Head(302, "Location: " + (path == "redirect-private" ? RedirectTarget : Url("has-credentials")) + "\r\nContent-Length: 0\r\n"); return;
+}
+if (path is "no-credentials" or "has-credentials")
+{
+    bool credentials = headers.ContainsKey("Cookie") || headers.ContainsKey("Authorization") || headers.ContainsKey("Referer");
+    if (credentials != (path == "has-credentials") || !headers.TryGetValue("User-Agent", out var ua) || ua != "FlugelTest/2.0")
+    { await Head(401, "Content-Length: 0\r\n"); return; }
+}
             if (path == "redirect-loop") { await Head(302, "Location: " + Url("redirect-loop") + "\r\nContent-Length: 0\r\n"); return; }
             if (path == "416" && from is not null && !(from == 0 && to == 0))
             { await Head(416, $"Content-Range: bytes */{NormalSize}\r\nContent-Length: 0\r\n"); return; }

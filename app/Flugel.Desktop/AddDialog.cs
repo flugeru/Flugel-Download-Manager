@@ -169,7 +169,8 @@ internal sealed class AddDialog : FormDialog
                     ResolveServerFileName = _resolveName.IsChecked == true,
                     MediaQualityLabel = options.MediaQualityLabel,
                     MediaSegmentUrls = options.MediaSegmentUrls,
-                    CookieHeader = options.CookieHeader
+                    CookieHeader = options.CookieHeader,
+                    UserAgent = options.UserAgent
                 });
                 StartedNow = scheduledAt is null && _startNow.IsChecked == true;
                 CloseOk();

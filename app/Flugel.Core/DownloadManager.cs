@@ -63,6 +63,7 @@ public sealed class DownloadManager : IAsyncDisposable
         var handler = new SocketsHttpHandler
         {
             AutomaticDecompression = DecompressionMethods.None,
+            AllowAutoRedirect = false,
             MaxAutomaticRedirections = 8,
             UseCookies = false,
             ConnectTimeout = TimeSpan.FromSeconds(15),
@@ -208,7 +209,7 @@ public sealed class DownloadManager : IAsyncDisposable
                 QueueName = queueName,
                 Description = options.Description?.Trim() ?? "",
                 Referrer = string.IsNullOrWhiteSpace(options.Referrer) ? null : options.Referrer.Trim(),
-                UserAgent = string.IsNullOrWhiteSpace(options.UserAgent) ? null : options.UserAgent.Trim(),
+                UserAgent = ValidateUserAgent(options.UserAgent),
                 BasicAuthToken = authHeader,
                 Segments = count,
                 ScheduledAt = options.ScheduledAt,
@@ -943,6 +944,14 @@ public sealed class DownloadManager : IAsyncDisposable
         return trimmed;
     }
 
+    private static string? ValidateUserAgent(string? value)
+    {
+        if (value is null) return null;
+        if (value.Length > 2048 || value.Any(char.IsControl))
+            throw new ArgumentException("Invalid user agent.");
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
     private async Task<HttpResponseMessage> SendAsync(
         string url,
         long? from,
@@ -954,23 +963,42 @@ public sealed class DownloadManager : IAsyncDisposable
         string? cookieHeader,
         CancellationToken token)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
-        if (!string.IsNullOrEmpty(cookieHeader))
-            request.Headers.TryAddWithoutValidation("Cookie", cookieHeader);
-        request.Headers.AcceptEncoding.ParseAdd("identity");
-        if (from is { } start) request.Headers.Range = new RangeHeaderValue(start, to);
-        if (validator is not null) request.Headers.TryAddWithoutValidation("If-Range", validator);
-        if (!string.IsNullOrWhiteSpace(referrer) && Uri.TryCreate(referrer, UriKind.Absolute, out var refUri))
-            request.Headers.Referrer = refUri;
-        if (!string.IsNullOrWhiteSpace(userAgent))
-            request.Headers.TryAddWithoutValidation("User-Agent", userAgent);
-        if (!string.IsNullOrWhiteSpace(basicAuthToken) && Uri.TryCreate(url, UriKind.Absolute, out var reqUri))
+        for (int redirects = 0; ; redirects++)
         {
-            request.Headers.Authorization = new AuthenticationHeaderValue("Basic", basicAuthToken);
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            if (!string.IsNullOrEmpty(cookieHeader))
+                request.Headers.TryAddWithoutValidation("Cookie", cookieHeader);
+            request.Headers.AcceptEncoding.ParseAdd("identity");
+            if (from is { } start) request.Headers.Range = new RangeHeaderValue(start, to);
+            if (validator is not null) request.Headers.TryAddWithoutValidation("If-Range", validator);
+            if (!string.IsNullOrWhiteSpace(referrer) && Uri.TryCreate(referrer, UriKind.Absolute, out var refUri))
+                request.Headers.Referrer = refUri;
+            if (!string.IsNullOrWhiteSpace(userAgent))
+                request.Headers.TryAddWithoutValidation("User-Agent", userAgent);
+            if (!string.IsNullOrWhiteSpace(basicAuthToken) && Uri.TryCreate(url, UriKind.Absolute, out var reqUri))
+                request.Headers.Authorization = new AuthenticationHeaderValue("Basic", basicAuthToken);
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
+            timeout.CancelAfter(TimeSpan.FromSeconds(20));
+            var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeout.Token).ConfigureAwait(false);
+            if ((int)response.StatusCode is not (301 or 302 or 303 or 307 or 308) || response.Headers.Location is not { } location)
+                return response;
+            try
+            {
+                if (redirects >= 8) throw new HttpRequestException("Too many redirects.");
+                var previous = new Uri(url);
+                var next = ValidateUrl(new Uri(previous, location).AbsoluteUri);
+                if (previous.Scheme == "https" && next.Scheme == "http")
+                    throw new HttpRequestException("HTTPS downgrade redirect rejected.");
+                if (!string.Equals(previous.GetLeftPart(UriPartial.Authority), next.GetLeftPart(UriPartial.Authority), StringComparison.OrdinalIgnoreCase))
+                {
+                    cookieHeader = null;
+                    basicAuthToken = null;
+                    referrer = null;
+                }
+                url = next.AbsoluteUri;
+            }
+            finally { response.Dispose(); }
         }
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
-        timeout.CancelAfter(TimeSpan.FromSeconds(20));
-        return await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeout.Token).ConfigureAwait(false);
     }
 
     private static string? ExtractContentDispositionFileName(HttpResponseMessage response)

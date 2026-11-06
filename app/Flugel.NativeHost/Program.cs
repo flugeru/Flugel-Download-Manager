@@ -18,7 +18,8 @@ internal sealed record ParsedHostRequest(
     string? PageTitle = null,
     string? MediaQuality = null,
     IReadOnlyList<string>? SegmentUrls = null,
-    string? CookieHeader = null);
+    string? CookieHeader = null,
+    string? UserAgent = null);
 
 internal static class Program
 {
@@ -153,6 +154,7 @@ internal static class Program
             string? mediaQuality = null;
             List<string>? segmentUrls = null;
             string? cookie = null;
+            string? userAgent = null;
 
             foreach (var property in document.RootElement.EnumerateObject())
             {
@@ -195,8 +197,11 @@ internal static class Program
                     case "cookie" when property.Value.ValueKind == JsonValueKind.String:
                         cookie = property.Value.GetString();
                         break;
+                    case "userAgent" when property.Value.ValueKind == JsonValueKind.String:
+                        userAgent = property.Value.GetString();
+                        break;
                     // Accept older extension payloads with explicitly null optional metadata.
-                    case "fileName" or "referrer" or "pageTitle" or "mediaQuality" or "segmentUrls" or "cookie"
+                    case "fileName" or "referrer" or "pageTitle" or "mediaQuality" or "segmentUrls" or "cookie" or "userAgent"
                         when property.Value.ValueKind == JsonValueKind.Null:
                         break;
                     default:
@@ -228,8 +233,10 @@ internal static class Program
 
             if (cookie is not null && !ValidCookieHeader(cookie))
                 throw new InvalidDataException("Invalid cookie header.");
+            if (userAgent is not null && (userAgent.Length is < 1 or > 2048 || userAgent.Any(char.IsControl)))
+                throw new InvalidDataException("Invalid user agent.");
 
-            return new ParsedHostRequest(action, url, fileName, referrer, pageTitle, mediaQuality, segmentUrls, cookie);
+            return new ParsedHostRequest(action, url, fileName, referrer, pageTitle, mediaQuality, segmentUrls, cookie, userAgent);
         }
         catch (Exception error) when (error is JsonException or DecoderFallbackException or
                                       ArgumentException or InvalidOperationException)
@@ -323,7 +330,8 @@ internal static class Program
                 req.PageTitle,
                 req.MediaQuality,
                 req.SegmentUrls,
-                req.CookieHeader
+                req.CookieHeader,
+                req.UserAgent
             }) + "\n";
             byte[] bytes = Encoding.UTF8.GetBytes(payload);
             client.Write(bytes, 0, bytes.Length);
@@ -370,7 +378,7 @@ internal static class Program
                 }
             }
             var start = DesktopStartInfo(executable, req.Url, req);
-            if (req.CookieHeader is not null)
+            if (req.CookieHeader is not null || req.UserAgent is not null)
             {
                 // Cookies never go on the command line (visible to other processes); the desktop deletes this file after reading.
                 Directory.CreateDirectory(effectiveDataDir);
@@ -378,12 +386,12 @@ internal static class Program
                 File.WriteAllText(pending, JsonSerializer.Serialize(new
                 {
                     req.Url, req.FileName, req.Referrer, req.PageTitle, req.MediaQuality,
-                    req.SegmentUrls, req.CookieHeader
+                    req.SegmentUrls, req.CookieHeader, req.UserAgent
                 }), Encoding.UTF8);
                 start.ArgumentList.Add("--pending-request");
                 start.ArgumentList.Add(pending);
             }
-            if (req.SegmentUrls is { Count: > 0 } && req.CookieHeader is null)
+            if (req.SegmentUrls is { Count: > 0 } && req.CookieHeader is null && req.UserAgent is null)
             {
                 Directory.CreateDirectory(effectiveDataDir);
                 string segFile = Path.Combine(effectiveDataDir, $"pending-segments-{Guid.NewGuid():N}.json");

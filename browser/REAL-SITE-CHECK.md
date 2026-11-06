@@ -50,6 +50,20 @@ A conclusão de bloqueio acima foi superada pelo teste seguindo o caminho indica
 - Histórico recente do Helium inspecionado após o teste: nova cópia do episódio 08 com estado **Cancelado**. A cópia antiga do navegador continua preservada; não foi removido histórico nem arquivo do usuário.
 - Nenhuma credencial registrada na evidência. Reprodução integral continua não verificada.
 
+### Contexto de request e redirect: fixture local, 14:35 UTC
+
+Extensão **2.2.1**; teste real no Helium em perfil temporário, com host registrado e confirmação WPF. `FDM_INTERCEPT_TEST=1 FDM_REQUEST_CONTEXT_TEST=1` em `live-auth-check.cjs`:
+
+- Link normal responde 302; o FDM recebe a URL final, sem repetir o endpoint inicial de redirect.
+- Servidor exige cookie de fixture e User-Agent específico. Browser e desktop passaram nas duas condições, com permissão por site explícita.
+- Transferência automática de **4.194.304 bytes**, SHA-256 `469169f01110bb3f23c42932a46f7f6214df68202a256af8019978fc57552436`; cópia do navegador `USER_CANCELED`.
+- Formulário POST para o mesmo arquivo permanece no navegador e conclui com o mesmo hash. **Isso valida fallback, não suporte POST no FDM.**
+- Evidência sanitizada: `%LOCALAPPDATA%\Temp\opencode\auth-live-iOwA43\evidence.json`. O primeiro teste de POST selecionava prematuramente o item GET anterior; corrigido para aguardar um novo ID antes de avaliar o resultado.
+- Motor: **52/52** checks, incluindo retirada de Cookie/Authorization/Referer em redirect entre origens e preservação na mesma origem. Ponte nativa: **18/18**; smoke WPF: **19/19** a 125%, sem alegação de matriz de resoluções completa.
+- Regressão simulada agora cobre primeira gravação após reinício do worker, métodos desconhecidos/ambíguos e rejeição de User-Agent injetado. Suspensão real do worker continua pendente.
+- O cancelamento da cópia do navegador ainda ocorre no aceite **para confirmação**, não no aceite durável do job. Auditoria e pendências em `analysis/browser-parity-audit.md`; paridade IDM não declarada.
+- Repetição com binários finais e desktop inicialmente fechado: `%LOCALAPPDATA%\Temp\opencode\auth-live-7iurxD\evidence.json`, 14:41 UTC; redirect/cookie/User-Agent, hash e fallback POST aprovados novamente. Perfil pessoal não recarregado nesta rodada; atualização permanece nos artifacts e nos perfis temporários testados.
+
 Teste reproduzível em PowerShell, com host previamente registrado para o ID da extensão:
 
 ```powershell
