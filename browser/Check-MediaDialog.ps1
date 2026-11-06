@@ -1,4 +1,4 @@
-﻿param([Parameter(Mandatory=$true)][string]$Destination)
+﻿param([Parameter(Mandatory=$true)][string]$Destination, [string]$ExpectedUrlPattern = '^http://127\.0\.0\.1:\d+/588340\.mp4$')
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName UIAutomationClient,UIAutomationTypes
 $root = [System.Windows.Automation.AutomationElement]::RootElement
@@ -24,7 +24,7 @@ function ById([string]$Id) {
     return $element
 }
 $url = (ById 'SourceUrl').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value
-if ($url -notmatch '^http://127\.0\.0\.1:\d+/588340\.mp4$') { throw 'Refusing to confirm anything except the controlled local MP4 fixture.' }
+if ($url -notmatch $ExpectedUrlPattern) { throw 'Refusing to confirm anything except the controlled local MP4 fixture.' }
 (ById 'DestinationDirectory').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue($Destination)
 $radios = $dialog.FindAll([System.Windows.Automation.TreeScope]::Descendants, (New-Object System.Windows.Automation.PropertyCondition ([System.Windows.Automation.AutomationElement]::ControlTypeProperty), ([System.Windows.Automation.ControlType]::RadioButton)))
 $start = $radios | Where-Object { $_.Current.Name -replace '_','' -eq 'Start now' } | Select-Object -First 1
@@ -35,4 +35,5 @@ $button = $dialog.FindFirst([System.Windows.Automation.TreeScope]::Descendants,$
 if (-not $button) { throw 'Add download button missing.' }
 $button.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
 'PASS local browser MP4 reaches desktop confirmation and Start now'
+
 
