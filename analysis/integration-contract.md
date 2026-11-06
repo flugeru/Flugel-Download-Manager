@@ -1,6 +1,6 @@
 # Browser-to-desktop behavioral contract
 
-Clean-room behavioral guidance for StreamHarbor. Not proprietary source, not ABI compatibility promise. **Observed** means static packaged logic or configuration; **recommended** means new design; **unknown** means not proven here. Implementation agent should consume this file and inventory report, not extracted source/assets/binaries.
+Clean-room behavioral guidance for Flugel Download Manager. Not proprietary source, not ABI compatibility promise. **Observed** means static packaged logic or configuration; **recommended** means new design; **unknown** means not proven here. Implementation agent should consume this file and inventory report, not extracted source/assets/binaries.
 
 ## 1. Boundary and roles
 

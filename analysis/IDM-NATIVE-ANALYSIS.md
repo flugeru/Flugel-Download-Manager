@@ -2,7 +2,7 @@
 
 ## Scope and status
 
-Analysis-only. Outputs stay in `C:\Users\Flugel\Projects\StreamHarbor\analysis`. No app/spec edits, target execution, installer execution, installation changes, licensing/activation analysis, or secret collection. Recovered pseudocode stays local; contracts below describe behavior, not reusable proprietary source.
+Analysis-only. Outputs stay in `C:\Users\Flugel\Projects\Flugel Download Manager\analysis`. No app/spec edits, target execution, installer execution, installation changes, licensing/activation analysis, or secret collection. Recovered pseudocode stays local; contracts below describe behavior, not reusable proprietary source.
 
 `IDMMsgHost.exe` inspected first with installed REA 6.7.0 CLI and Ghidra 12.1. Process-local `GHIDRA_INSTALL_DIR`, `JAVA_HOME`, `TEMP`, and `TMP`; no global MCP/client configuration changes. Local stdio MCP launched through same REA CLI for persistent queries, evidence export, and explicit close. Ghidra headless fallback not needed.
 

@@ -24,9 +24,9 @@ if(r.error||r.status!==0)process.exitCode=1;
 else {const x=r.stdout;if(x.length<4||x.readUInt32LE(0)!==x.length-4||JSON.parse(x.subarray(4)).status!=="accepted-for-confirmation")process.exitCode=1;}
 '@ | node
     $hostCheckExit = $LASTEXITCODE
-    $children = @(Get-CimInstance Win32_Process -Filter "Name = 'StreamHarbor.exe'" | Where-Object {
+    $children = @(Get-CimInstance Win32_Process -Filter "Name = 'FlugelDownloadManager.exe'" | Where-Object {
         $_.CommandLine -like '*--data-dir*' -and $_.CommandLine.Contains($DataDirectory) -and
-        $_.ExecutablePath -eq (Join-Path ([IO.Directory]::GetParent([IO.Path]::GetDirectoryName($HostPath)).FullName) 'Harbor.Desktop\StreamHarbor.exe')
+        $_.ExecutablePath -eq (Join-Path ([IO.Directory]::GetParent([IO.Path]::GetDirectoryName($HostPath)).FullName) 'Flugel.Desktop\FlugelDownloadManager.exe')
     })
     if ($children.Count -ne 1) { throw "Expected one exact isolated desktop process; found $($children.Count). Host exit: $hostCheckExit" }
     $childId = [int]$children[0].ProcessId

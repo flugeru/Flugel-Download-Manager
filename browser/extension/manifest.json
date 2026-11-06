@@ -1,9 +1,22 @@
 {
   "manifest_version": 3,
-  "name": "StreamHarbor Link Confirmation",
-  "version": "1.0.0",
-  "description": "Send a chosen HTTP(S) link to StreamHarbor for confirmation. No automatic download capture.",
-  "permissions": ["contextMenus", "nativeMessaging"],
-  "background": { "service_worker": "service-worker.js" },
-  "action": { "default_title": "StreamHarbor: choose a link context menu to request confirmation" }
+  "name": "Flugel Download Manager",
+  "version": "2.1.0",
+  "description": "Send links and detected media to Flugel Download Manager for user-confirmed download. Respects browser permissions; protected streams are never bypassed.",
+  "permissions": ["contextMenus", "nativeMessaging", "storage", "scripting", "activeTab", "tabs", "webRequest", "cookies"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "service-worker.js", "type": "module" },
+  "action": {
+    "default_title": "Flugel Download Manager",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "icons": {}
 }

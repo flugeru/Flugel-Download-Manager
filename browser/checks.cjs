@@ -40,13 +40,13 @@ const chrome = {
 vm.runInNewContext(fs.readFileSync(path.join(__dirname, "extension/service-worker.js"), "utf8"),
   { chrome, URL, TextEncoder });
 installed();
-assert.equal(menu.id, "streamharbor-confirm-link");
+assert.equal(menu.id, "flugel-download-manager-confirm-link");
 assert.equal(JSON.stringify(menu.contexts), '["link"]');
 assert.equal(JSON.stringify(menu.targetUrlPatterns), '["http://*/*","https://*/*"]');
 const click = url => clicked({ menuItemId: menu.id, linkUrl: url });
 click("https://example.test/file?private=secret&x=%22");
 assert.equal(requests.length, 1);
-assert.equal(requests[0].host, "org.streamharbor.bridge");
+assert.equal(requests[0].host, "com.flugel.downloadmanager");
 assert.equal(JSON.stringify(requests[0].request), '{"version":1,"action":"enqueue","url":"https://example.test/file?private=secret&x=%22"}');
 assert.equal(lastBadge, "ASK");
 assert.ok(lastTitle.includes("not a completed download") && !lastTitle.includes("secret"));

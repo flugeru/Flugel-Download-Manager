@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Flugel Download Manager</title>
+  <style>
+    body { font: 13px/1.4 Segoe UI, system-ui, sans-serif; margin: 0; min-width: 290px; color: #172D46; background: #fff; }
+    header { padding: 12px 14px; background: #10304A; color: #fff; }
+    h1 { font-size: 15px; margin: 0; }
+    .sub { font-size: 11px; opacity: .85; margin-top: 2px; }
+    main { padding: 12px 14px; }
+    label { display: flex; gap: 10px; align-items: flex-start; margin: 10px 0; cursor: pointer; }
+    input[type=checkbox] { margin-top: 2px; }
+    .site { margin-top: 12px; padding-top: 10px; border-top: 1px solid #dbe3ea; }
+    .host { font-weight: 600; word-break: break-all; }
+    .muted { color: #52647A; font-size: 11px; margin-top: 8px; }
+    button { margin-top: 10px; padding: 7px 10px; border: 1px solid #cfd9e3; border-radius: 6px; background: #f4f7fa; cursor: pointer; }
+    button:hover { background: #eef8f8; }
+    #status { min-height: 18px; margin-top: 8px; font-size: 11px; color: #1E7A46; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Flugel Download Manager</h1>
+    <div class="sub">Send links and detected media for user-confirmed download.</div>
+  </header>
+  <main>
+    <label><input id="globalEnabled" type="checkbox" /><span>Enable Flugel Download Manager on web pages</span></label>
+    <label><input id="balloonEnabled" type="checkbox" /><span>Show the “Download this video” balloon near video players</span></label>
+    <label><input id="autoIntercept" type="checkbox" /><span>Automatically offer Flugel Download Manager for matching downloads (opt-in)</span></label>
+    <div class="site">
+      <div>This site: <span id="host" class="host">—</span></div>
+      <label><input id="siteEnabled" type="checkbox" /><span>Enable Flugel Download Manager on this site</span></label>
+      <label><input id="siteCookies" type="checkbox" /><span>Send this browser session's cookies for this site when I start a download (needed for logged-in files). Used only for the transfer I start; never saved.</span></label>
+    </div>
+    <div class="muted">When interception fails or is off, the browser completes the download itself. Protected/DRM streams are never bypassed.</div>
+    <div id="status" role="status" aria-live="polite"></div>
+    <div class="site">
+      <strong>Conexão com o aplicativo</strong>
+      <div id="bridgeStatus" role="status" aria-live="polite">Verificando…</div>
+      <div class="muted">ID desta extensão: <span id="extensionId"></span></div>
+      <div class="muted">Se a ponte não estiver registrada, execute <code>browser/Register-NativeHost.ps1</code> com este ID, o navegador e o caminho de <code>Flugel.NativeHost.exe</code>. Não requer administrador.</div>
+      <button id="checkBridge" type="button">Verificar conexão</button>
+    </div>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

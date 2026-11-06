@@ -97,6 +97,6 @@ Connected MCP originally lacked `GHIDRA_INSTALL_DIR`/`JAVA_HOME`. Repaired **onl
 | `idman-focused-evidence.bundle.json` | 13 | `idman-focused-close.json` |
 
 Corresponding provider-neutral snapshots retained. Canonical REA `evidence-export` validations retained as `*-bundle-validation.json` and `*-validated.bundle.json`. Run `node .\verify-analysis.mjs` from analysis directory to validate cited Evidence retention, unchanged original target/toolchain hashes, and close receipts. Latest result: `verification-result.json`.
-Final check at `2026-11-06T07:00:38.3374029Z` passed, exit code 0. Targeted process inventory found no remaining `rea-local-session` or analysis-owned `StreamHarbor...rea-ghidra` Java/Node processes; unrelated connected MCP servers left untouched.
+Final check at `2026-11-06T07:00:38.3374029Z` passed, exit code 0. Targeted process inventory found no remaining `rea-local-session` or analysis-owned `Flugel Download Manager...rea-ghidra` Java/Node processes; unrelated connected MCP servers left untouched.
 
 Investigation stopped after completed bounded pass; no further broad IDMan analysis launched.

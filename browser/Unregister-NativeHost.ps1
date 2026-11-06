@@ -12,10 +12,10 @@ param(
 $ErrorActionPreference = 'Stop'
 if ($env:OS -ne 'Windows_NT') { throw 'Windows only.' }
 if ($ExtensionId -cnotmatch '^[a-p]{32}$') { throw 'Extension ID must be 32 lowercase letters a-p.' }
-$manifestDirectory = Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'StreamHarbor\NativeMessaging'
+$manifestDirectory = Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'Flugel Download Manager\NativeMessaging'
 $manifestPath = Join-Path $manifestDirectory "$Browser-$ExtensionId.json"
 $vendor = if ($Browser -eq 'Chrome') { 'Google\Chrome' } else { 'Microsoft\Edge' }
-$keyPath = "Software\$vendor\NativeMessagingHosts\org.streamharbor.bridge"
+$keyPath = "Software\$vendor\NativeMessagingHosts\com.flugel.downloadmanager"
 $origin = "chrome-extension://$ExtensionId/"
 $views = @([Microsoft.Win32.RegistryView]::Registry32, [Microsoft.Win32.RegistryView]::Registry64)
 
@@ -31,7 +31,7 @@ foreach ($view in $views) {
                     throw 'Registration does not match the explicit extension ID, or contains extra data. Nothing removed.'
                 }
                 $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
-                if ($manifest.name -cne 'org.streamharbor.bridge' -or @($manifest.allowed_origins).Count -ne 1 -or
+                if ($manifest.name -cne 'com.flugel.downloadmanager' -or @($manifest.allowed_origins).Count -ne 1 -or
                     $manifest.allowed_origins[0] -cne $origin) {
                     throw 'Manifest ownership check failed. Nothing removed.'
                 }
