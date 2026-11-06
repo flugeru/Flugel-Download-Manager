@@ -16,12 +16,14 @@ const downloads = path.join(output, 'downloads');
 fs.mkdirSync(downloads);
 const intercept = process.env.FDM_INTERCEPT_TEST === '1';
 const requestContextTest = process.env.FDM_REQUEST_CONTEXT_TEST === '1';
+const filenameTest = process.env.FDM_FILENAME_TEST === '1';
+const titleTest = process.env.FDM_TITLE_TEST === '1';
 const browserAgent = 'FlugelBrowserFixture/1.0';
 
 const apiPath = 'Animes/Test Series/Sample Episode - 01 [WEB 1080p].mkv';
-const apiUrlPath = '/api/download?path=' + encodeURIComponent(apiPath);
+const apiUrlPath = filenameTest ? '/api/download?id=opaque-fixture' : '/api/download?path=' + encodeURIComponent(apiPath);
 const payload = Buffer.alloc((intercept ? 4096 : 256) * 1024, 0x6b);
-const expectedName = 'Sample Episode - 01 [WEB 1080p].mkv';
+const expectedName = filenameTest ? '[Flugel] Tensei Shitara Ken Deshita Ii - 04.mp4' : 'Sample Episode - 01 [WEB 1080p].mkv';
 const seen = [];
 
 const server = http.createServer((req, res) => {
@@ -39,8 +41,8 @@ seen.push({ path: url.searchParams.get('path'), authorized, agentMatches });
       res.writeHead(401, { 'Content-Type': 'application/json' });
       return res.end('{"error":"unauthorized"}');
     }
-    res.writeHead(200, { 'Content-Type': 'video/x-matroska', 'Content-Length': payload.length,
-      ...(intercept ? { 'Content-Disposition': 'attachment; filename="' + expectedName + '"' } : {}) });
+res.writeHead(200, { 'Content-Type': filenameTest ? 'video/mp4' : 'video/x-matroska', 'Content-Length': payload.length,
+...(intercept ? { 'Content-Disposition': titleTest ? 'attachment' : filenameTest ? "attachment; filename=download; filename*=UTF-8''" + encodeURIComponent(expectedName) : 'attachment; filename="' + expectedName + '"' } : {}) });
     if (intercept && req.method !== 'HEAD') {
       let offset = 0;
       const timer = setInterval(() => {
@@ -54,7 +56,7 @@ seen.push({ path: url.searchParams.get('path'), authorized, agentMatches });
     return res.end(req.method === 'HEAD' ? undefined : payload);
   }
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-  res.end(`<!doctype html><title>Logged-in media check</title>${intercept
+res.end(`<!doctype html><title>${titleTest ? expectedName.replace(/\.mp4$/, '') : 'Logged-in media check'}</title>${intercept
 ? `<a id="download" href="${requestContextTest ? '/redirect-download' : apiUrlPath}">Download authenticated file</a>`
     : `<video width="640" height="360" controls src="${apiUrlPath}"></video>`}`);
 });
@@ -112,8 +114,14 @@ function makeCdp(ws) {
   });
   pageSocket = await openSocket(pageTarget.webSocketDebuggerUrl);
   workerSocket = await openSocket(workerTarget.webSocketDebuggerUrl);
-  const pageCdp = makeCdp(pageSocket), workerCdp = makeCdp(workerSocket);
-  const evaluate = async (cdp, expression) => {
+const pageCdp = makeCdp(pageSocket), workerCdp = makeCdp(workerSocket);
+for (let i = 0; i < 100; i++) {
+const ready = await workerCdp('Runtime.evaluate', { expression: 'typeof chrome !== "undefined" && !!chrome.storage', returnByValue: true });
+if (ready.result.value) break;
+assert.notEqual(i, 99, 'Extension service worker never initialized');
+await delay(100);
+}
+const evaluate = async (cdp, expression) => {
     const result = await cdp('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
     assert.ok(!result.exceptionDetails, JSON.stringify(result.exceptionDetails));
     return result.result.value;
@@ -166,7 +174,7 @@ item = await evaluate(workerCdp, '(async()=> (await chrome.downloads.search({}))
   }
 
   const ui = spawnSync('powershell.exe', ['-NoProfile', '-File', path.join(__dirname, 'Check-MediaDialog.ps1'),
-    '-Destination', downloads, '-ExpectedUrlPattern', '^http://127\\.0\\.0\\.1:\\d+/api/download\\?path=', ...(intercept ? ['-RequireStartNow'] : [])],
+'-Destination', downloads, '-ExpectedUrlPattern', '^http://127\\.0\\.0\\.1:\\d+/api/download\\?(path|id)=', ...(intercept ? ['-RequireStartNow'] : [])],
     { timeout: 30000, encoding: 'utf8' });
   assert.equal(ui.status, 0, ui.stderr || ui.stdout);
 
@@ -208,7 +216,7 @@ assert.equal(hash(fs.readFileSync(path.join(browserDownloads, expectedName))), h
 }
 
   const report = {
-passed: true, capturedAtUtc: new Date().toISOString(), browser: process.argv[2], label, automaticInterception: intercept, requestContextTest,
+passed: true, capturedAtUtc: new Date().toISOString(), browser: process.argv[2], label, automaticInterception: intercept, requestContextTest, filenameTest, titleTest,
 postBrowserFallbackVerified: requestContextTest,
     scope: 'Real unpacked extension, browser session cookie for a local origin with explicit per-site permission, registered native host, WPF confirmation, exact bytes. External site and codec playback not tested.',
     serverRequests: seen, fileName: expectedName, bytes: payload.length, sha256: hash(payload), evidence: output

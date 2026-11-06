@@ -413,6 +413,21 @@ await Check("Content-Disposition server filename resolution", async () =>
     Assert(snap.FileName == "server-named-archive.zip", $"Expected server-named-archive.zip, got {snap.FileName}");
 });
 
+await Check("automatic server filename handles UTF-8 collisions and preserves explicit names", async () =>
+{
+    var p = Paths("disposition-utf8");
+    const string expected = "[Flugel] Episódio 04.mp4";
+    await File.WriteAllTextAsync(Path.Combine(p.output, expected), "existing-user-file");
+    await using var m = new DownloadManager(p.state);
+    var automatic = await Wait(m, m.Add(server.Url("disposition-utf8"), p.output));
+    await Verify(automatic, TestServer.NormalSize);
+    Assert(automatic.FileName == "[Flugel] Episódio 04 (1).mp4", "UTF-8 filename or collision handling failed");
+    Assert(await File.ReadAllTextAsync(Path.Combine(p.output, expected)) == "existing-user-file", "Existing file overwritten");
+    var explicitName = await Wait(m, m.Add(server.Url("disposition-utf8"), p.output, "chosen.mp4"));
+    await Verify(explicitName, TestServer.NormalSize);
+    Assert(explicitName.FileName == "chosen.mp4", "Explicit filename was replaced");
+});
+
 await Check("request context headers and basic auth without log leak", async () =>
 {
     var p = Paths("auth-context");
@@ -681,7 +696,8 @@ if (path is "no-credentials" or "has-credentials")
             if (path == "malformed") contentRange = "Content-Range: nonsense\r\n";
             if (path == "wrong" && !probe && ranged) contentRange = $"Content-Range: bytes {start + 1}-{end}/{size}\r\n";
             bool chunked = path == "unknown";
-            string disp = path == "disposition" ? "Content-Disposition: attachment; filename=\"server-named-archive.zip\"\r\n" : "";
+            string disp = path == "disposition" ? "Content-Disposition: attachment; filename=\"server-named-archive.zip\"\r\n" :
+                path == "disposition-utf8" ? "Content-Disposition: attachment; filename=download; filename*=UTF-8''%5BFlugel%5D%20Epis%C3%B3dio%2004.mp4\r\n" : "";
             await Head(ranged ? 206 : 200, validator + disp + (path == "encoded" ? "Content-Encoding: gzip\r\n" : "") + "Accept-Ranges: bytes\r\n" + contentRange + (chunked ? "Transfer-Encoding: chunked\r\n" : $"Content-Length: {length}\r\n"));
             bool drop = path == "drop" && !probe && count <= 2;
             long sent = 0; byte[] buffer = new byte[32768];

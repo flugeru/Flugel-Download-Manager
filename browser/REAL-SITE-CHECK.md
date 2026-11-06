@@ -64,6 +64,21 @@ Extensão **2.2.1**; teste real no Helium em perfil temporário, com host regist
 - O cancelamento da cópia do navegador ainda ocorre no aceite **para confirmação**, não no aceite durável do job. Auditoria e pendências em `analysis/browser-parity-audit.md`; paridade IDM não declarada.
 - Repetição com binários finais e desktop inicialmente fechado: `%LOCALAPPDATA%\Temp\opencode\auth-live-7iurxD\evidence.json`, 14:41 UTC; redirect/cookie/User-Agent, hash e fallback POST aprovados novamente. Perfil pessoal não recarregado nesta rodada; atualização permanece nos artifacts e nos perfis temporários testados.
 
+### Nomes corretos em endpoints opacos — extensão 2.2.2
+
+Correção motivada por captura do usuário: browser nomeava `[Flugel] Tensei Shitara Ken Deshita Ii - 04.mp4`, mas FDM salvava `download` de um endpoint Google Drive. O arquivo original não foi repetido nem renomeado nesta etapa.
+
+- Automático agora parte de `downloads.onDeterminingFilename`, não `onCreated`: deixa `suggest()` inalterado e usa o nome determinado pelo browser.
+- Prioridade independente: nome útil do browser; nome do cabeçalho observado; nome útil em URL/query; título da tab associado ao request com extensão MIME conhecida; fallback genérico. Título é sugestão, não prova do nome original. Nomes escolhidos explicitamente no desktop não são substituídos.
+- `filename*` UTF-8 é preferido; `filename` literal preserva percentuais/`;` entre aspas; nomes são sanitizados. Quando Add não fornece nome, o motor resolve Content-Disposition por padrão, com sufixo numérico para colisões sem sobrescrita.
+- Fixture REAL Helium `FDM_INTERCEPT_TEST=1 FDM_FILENAME_TEST=1`: endpoint `/api/download?id=opaque-fixture`, cabeçalho `filename=download` e `filename*` correto; FDM concluiu **4.194.304 bytes** com nome **`[Flugel] Tensei Shitara Ken Deshita Ii - 04.mp4`**, hash `469169f01110bb3f23c42932a46f7f6214df68202a256af8019978fc57552436`, browser `USER_CANCELED`. Evidência `auth-live-5AM2LN`, 14:54 UTC.
+- Fixture REAL com `FDM_TITLE_TEST=1`, sem filename no cabeçalho e URL opaca: título do documento usado com `.mp4`; mesmo nome/bytes/hash, browser cancelado. Evidência `auth-live-cdXRBL`, 14:55 UTC. Isso prova fallback local, não afirma que IDM usa o mesmo algoritmo.
+- Motor **53/53**, incluindo UTF-8, colisão sem sobrescrever e preservação do nome explícito; `harbor-checks-8a883cc9e6d947ec994234cf0c901574`. Regressão JS cobre nomes genéricos, título, query, prioridade e parsing de cabeçalhos.
+- Novo Google Drive real, Chrome/Edge e atualização do perfil pessoal ainda não comprovados. Instalador anterior não contém esta correção. Aceite durável continua pendente, sem alegação de paridade universal.
+- Regressão real de redirect/cookie/User-Agent e POST no navegador passou novamente após trocar o evento de captura: `auth-live-0sJw0f`, 14:56 UTC. Tentativa anterior encontrou worker ainda sem contexto Chrome inicializado (`chrome is not defined`); fixture passou a aguardar `chrome.storage` antes de configurar permissões.
+- Teste combinado final **nomes + redirect + cookie + User-Agent + fallback POST**, desktop inicialmente fechado: `auth-live-IeRF8G`, 14:58 UTC, todos aprovados com mesmo nome e hash. Smoke WPF **19/19** (`fdm-smoke-filename-495ce9caf1b84d0c977cad6d6306f924`); host **18/18**.
+- Perfil pessoal Helium recarregado (12:10 local / ~15:10 UTC): extensão passa de 2.2.0 para **2.2.2**, com origem confirmada em Preferences (`artifacts\browser\extension`) e cartão exibindo a nova versão. Content scripts só valem para páginas abertas depois do recarregamento. Instalador 0.2.2 (`artifacts\installer\FlugelDownloadManager-Setup-0.2.2.exe`, SHA-256 `042de090c7eb005f709f60f1c0a1d367a8c02c0149ee15f0c1cee3c5c36c7c96`, sem assinatura) foi compilado com essa base. Instalação/desinstalação do setup ainda não testadas.
+
 Teste reproduzível em PowerShell, com host previamente registrado para o ID da extensão:
 
 ```powershell

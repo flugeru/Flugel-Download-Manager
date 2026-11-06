@@ -18,13 +18,15 @@ let cookieJar = [];
 const session = {};
 const activeTab = { id: 7, url: 'https://nuvem.anitsu.moe/', title: 'Test' };
 const event = { addListener() {} };
+let determiningFilename;
 const chrome = {
   action: { setBadgeText() {}, setBadgeBackgroundColor() {}, setTitle() {} },
   contextMenus: { onClicked: event },
-  tabs: { onRemoved: event, onUpdated: event, async query() { return [activeTab]; } },
+tabs: { onRemoved: event, onUpdated: event, async query() { return [activeTab]; }, async get() { return activeTab; } },
 webRequest: { onBeforeRequest: event, onHeadersReceived: event, onBeforeSendHeaders: event },
   downloads: {
-    onCreated: event,
+onCreated: { addListener() { assert.fail('Do not capture before the browser determines the filename'); } },
+onDeterminingFilename: { addListener(fn) { determiningFilename = fn; } },
     async pause(id) { downloadCalls.push(['pause', id]); if (pauseFails) throw Error('already complete'); },
     async cancel(id) { downloadCalls.push(['cancel', id]); if (cancelFails) throw Error('cannot cancel'); },
     async resume(id) { downloadCalls.push(['resume', id]); }
@@ -57,7 +59,25 @@ const nuvem = 'https://nuvem.anitsu.moe/api/download?path=Animes%2FLetra%20Y%2FY
   assert.equal(context.mediaNameFromUrl('https://cdn.example.test/588340.mp4?token=x'), '588340.mp4');
   assert.equal(context.mediaNameFromUrl('https://example.test/watch?id=7'), null);
   assert.equal(context.mediaNameFromUrl('https://example.test/page.html'), null);
-  assert.equal(context.typedName('https://example.test/api/download', 'video/x-matroska'), 'download.mkv');
+assert.equal(context.typedName('https://example.test/api/download', 'video/x-matroska'), 'download.mkv');
+const correctName = '[Flugel] Tensei Shitara Ken Deshita Ii - 04.mp4';
+assert.equal(context.nameFromDisposition("attachment; filename=download; filename*=UTF-8'pt'%5BFlugel%5D%20Epis%C3%B3dio.mp4"), '[Flugel] Episódio.mp4');
+assert.equal(context.nameFromDisposition('attachment; filename="part; 100%20.mp4"'), 'part; 100%20.mp4');
+assert.equal(context.nameFromDisposition("attachment; filename=backup.mp4; filename*=UTF-8''bad%ZZ"), 'backup.mp4');
+const drive = { url: 'https://drive.usercontent.google.com/download?id=fixture', mime: 'video/mp4', filename: '' };
+assert.equal(context.fileNameForDownload({ ...drive, filename: 'C:\\Downloads\\' + correctName }, {}, 'Wrong title'), correctName);
+assert.equal(context.fileNameForDownload({ ...drive, filename: 'download' }, { fileName: correctName }, 'Wrong title'), correctName);
+assert.equal(context.fileNameForDownload(drive, {}, 'Episode 04'), 'Episode 04.mp4');
+assert.equal(context.fileNameForDownload(drive, {}, 'Series / Episode 04'), 'Series _ Episode 04.mp4');
+assert.equal(context.fileNameForDownload({ ...drive, filename: 'download.bin' }, {}, 'Episode 04.mp4'), 'Episode 04.mp4');
+assert.equal(context.fileNameForDownload({ ...drive, filename: 'download.mp4' }, { fileName: 'download' }, 'Episode 04'), 'Episode 04.mp4');
+assert.equal(context.fileNameForDownload({ ...drive, url: 'https://example.test/get?filename=real.zip' }, {}, 'Wrong title'), 'real.zip');
+assert.equal(context.fileNameForDownload({ ...drive, filename: 'chosen.name' }, { fileName: 'server.mp4' }, 'Wrong title'), 'chosen.name');
+let suggestions = 0;
+determiningFilename({ url: 'blob:https://example.test/local', state: 'in_progress' }, (...args) => {
+assert.equal(args.length, 0, 'Browser filename must not be overridden'); suggestions++;
+});
+assert.equal(suggestions, 1);
 await context.recordMedia(7, { url: nuvem, fileName: 'episode.mkv' });
   const message = (msg, sender = {}) => new Promise(resolve => listener(msg, sender, resolve));
   assert.equal((await message({ type: 'get-page-media' })).media.length, 1);

@@ -66,6 +66,7 @@ public partial class MainWindow : Window
                 {
                     Url = initialUrl,
                     FileName = initialFileName,
+                    ResolveServerFileName = string.IsNullOrWhiteSpace(initialFileName),
                     Referrer = initialReferrer,
                     MediaQualityLabel = initialMediaQuality,
                     MediaSegmentUrls = initialSegments,

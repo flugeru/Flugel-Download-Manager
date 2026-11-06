@@ -36,7 +36,7 @@ internal sealed class AddDialog : FormDialog
         _category = Choice("_Category", settings.Categories.Select(c => c.Name), options.Category ?? DownloadManager.ClassifyFileCategory(options.FileName ?? "", settings.Categories), "CategoryChoice");
         _queue = Choice("_Queue", settings.Queues.Select(q => q.Name), options.QueueName, "QueueChoice");
         _useCategoryFolder = Check("Store in a category subfolder (uses Save To settings)", options.UseCategorySubfolder || settings.UseCategorySubfolders, "UseCategoryFolder");
-        _resolveName = Check("Ask the server for the final file name (Content-Disposition)", options.ResolveServerFileName, "ResolveServerName");
+        _resolveName = Check("Ask the server for the final file name (Content-Disposition)", options.ResolveServerFileName || string.IsNullOrWhiteSpace(options.FileName), "ResolveServerName");
         _description = Input("_Description · optional", options.Description, "Description");
         _referrer = Input("_Referrer · optional page URL", options.Referrer ?? "", "Referrer");
 

@@ -134,7 +134,7 @@ public sealed class DownloadManager : IAsyncDisposable
             Segments = segments,
             StartImmediately = true,
             UseCategorySubfolder = false,
-            ResolveServerFileName = false
+            ResolveServerFileName = string.IsNullOrWhiteSpace(fileName)
         });
 
     public string AddWithOptions(AddDownloadOptions options)
@@ -799,13 +799,9 @@ public sealed class DownloadManager : IAsyncDisposable
             if (!string.IsNullOrWhiteSpace(dispName))
             {
                 string sanitized = SanitizeFileName(dispName);
-                string candidatePath = Path.Combine(job.DestinationDirectory, sanitized);
-                if (!File.Exists(candidatePath) && !Directory.Exists(candidatePath) &&
-                    !jobs.Any(j => !j.Removed && j.Id != job.Id && string.Equals(Destination(j), candidatePath, StringComparison.OrdinalIgnoreCase)))
-                {
-                    job.FileName = sanitized;
-                    job.ResolveServerFileName = false;
-                }
+                if (!string.Equals(job.FileName, sanitized, StringComparison.OrdinalIgnoreCase))
+                    job.FileName = EnsureUniqueFileName(job.DestinationDirectory, sanitized);
+                job.ResolveServerFileName = false;
             }
             if (!segmented || job.Validator != validator || job.Total != total || job.EffectiveUrl != effectiveUrl || !ValidParts(job)) Reset(job);
             job.Total = total; job.Validator = validator; job.EffectiveUrl = effectiveUrl;

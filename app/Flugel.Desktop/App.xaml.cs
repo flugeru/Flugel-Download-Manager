@@ -182,6 +182,7 @@ public partial class App : Application
                 {
                     Url = req.Url ?? "",
                     FileName = req.FileName,
+                    ResolveServerFileName = string.IsNullOrWhiteSpace(req.FileName),
                     Referrer = req.Referrer,
                     Description = req.PageTitle ?? "",
                     MediaQualityLabel = req.MediaQuality,

@@ -22,7 +22,7 @@ const previous = requestContext.get(url);
 const userAgent = details.requestHeaders?.find(h => h.name.toLowerCase() === "user-agent")?.value;
 requestContext.delete(url);
 requestContext.set(url, { method: details.method, userAgent: userAgent || previous?.userAgent,
-  blocked: (previous && Date.now() - previous.at < 30000 && previous.blocked) || details.method !== "GET", at: Date.now() });
+  tabId: details.tabId, blocked: (previous && Date.now() - previous.at < 30000 && previous.blocked) || details.method !== "GET", at: Date.now() });
 while (requestContext.size > 256) requestContext.delete(requestContext.keys().next().value);
 }
 
@@ -70,14 +70,44 @@ function mediaNameFromUrl(url) {
 
 function nameFromDisposition(value) {
   if (!value) return null;
-  const star = /filename\*=(?:UTF-8'')?([^;]+)/i.exec(value);
-  const plain = /filename="?([^";]+)"?/i.exec(value);
-  const raw = (star ? star[1] : plain ? plain[1] : "").trim();
-  if (!raw) return null;
-  let name;
-  try { name = decodeURIComponent(raw); } catch { name = raw; }
-  name = name.replace(/[<>:"/\\|?*\x00-\x1f]/g, "_").slice(0, 200);
-  return name || null;
+const star = /(?:^|;)\s*filename\*\s*=\s*UTF-8'[^']*'([^;]+)/i.exec(value);
+if (star) {
+try { return safeName(decodeURIComponent(star[1].trim())); } catch { /* Use the plain fallback on invalid encoding. */ }
+}
+const plain = /(?:^|;)\s*filename\s*=\s*(?:"((?:\\.|[^"\\])*)"|([^;]*))/i.exec(value);
+// Plain filename is literal, not percent encoded (RFC 6266).
+return plain ? safeName(plain[1] !== undefined ? plain[1].replace(/\\(.)/g, "$1") : plain[2].trim()) : null;
+}
+
+function safeName(value) {
+if (typeof value !== "string") return null;
+const name = value.split(/[\\/]/).pop().replace(/[<>:"/\\|?*\x00-\x1f\x7f]/g, "_").trim().replace(/[. ]+$/, "").slice(0, 200);
+return name && name !== "." && name !== ".." ? name : null;
+}
+
+function genericName(name) {
+return !name || /^(download|downloadfile|file|attachment|index)(\.[a-z0-9]{1,10})?$/i.test(name);
+}
+
+function fileNameForDownload(item, observed, pageTitle) {
+const browserName = safeName(item.filename);
+if (!genericName(browserName)) return browserName;
+const serverName = safeName(observed?.fileName);
+if (!genericName(serverName)) return serverName;
+for (const raw of [item.finalUrl, item.url]) {
+try {
+const u = new URL(raw);
+for (const value of [u.searchParams.get("filename"), u.searchParams.get("file"), u.searchParams.get("path"), u.pathname]) {
+if (!value) continue;
+const name = safeName(decodeURIComponent(value));
+if (!genericName(name) && /\.[a-z0-9]{1,10}$/i.test(name)) return name;
+}
+} catch {}
+}
+const title = safeName(pageTitle?.replace(/[\\/]/g, "_"));
+const ext = EXT_FOR_TYPE[(item.mime || observed?.mime || "").split(";")[0].toLowerCase()];
+if (title) return ext && !title.toLowerCase().endsWith("." + ext) ? title + "." + ext : title;
+return browserName || (ext ? "download." + ext : undefined);
 }
 
 function formatOf(name) {
@@ -227,6 +257,8 @@ try {
     const headers = Object.fromEntries((details.responseHeaders || []).map(h => [h.name.toLowerCase(), h.value || ""]));
     const type = (headers["content-type"] || "").split(";")[0].trim();
     const named = nameFromDisposition(headers["content-disposition"]);
+    const observed = contextFor(url);
+    if (observed) { observed.fileName = named; observed.mime = type; }
     const name = named && MEDIA_EXT.test(named) ? named : mediaNameFromUrl(url) || (MEDIA_TYPE.test(type) ? typedName(url, type) : null);
     if (!name) return;
     const size = Number(headers["content-length"]) || null;
@@ -238,7 +270,8 @@ const EXT_FOR_TYPE = {
   "video/mp4": "mp4", "video/x-m4v": "m4v", "video/webm": "webm", "video/quicktime": "mov", "video/x-msvideo": "avi",
   "video/x-matroska": "mkv", "video/mp2t": "ts", "video/x-flv": "flv", "video/3gpp": "3gp", "video/ogg": "ogv",
   "audio/mpeg": "mp3", "audio/mp4": "m4a", "audio/flac": "flac", "audio/ogg": "ogg", "audio/wav": "wav",
-  "application/vnd.apple.mpegurl": "m3u8", "application/x-mpegurl": "m3u8", "application/dash+xml": "mpd"
+  "application/vnd.apple.mpegurl": "m3u8", "application/x-mpegurl": "m3u8", "application/dash+xml": "mpd",
+  "application/pdf": "pdf", "application/zip": "zip", "application/x-7z-compressed": "7z", "application/x-rar-compressed": "rar"
 };
 
 // Used only when the server gives a media type but neither the URL nor the disposition names a file.
@@ -262,7 +295,7 @@ if (item.state !== "in_progress" || item.paused || item.byExtensionId || item.in
 const originalUrl = cleanUrl(item.url);
 const url = cleanUrl(item.finalUrl) || originalUrl;
 if (!url) return; // blob/data downloads cannot be fetched independently by the desktop.
-// ponytail: POST/body replay is not implemented; unknown or ambiguous methods stay in the browser.
+// POST/body replay is not implemented; unknown or ambiguous methods stay in the browser.
 const observed = contextFor(url);
 if (!observed || observed.blocked || contextFor(originalUrl)?.blocked) return;
 const pageUrl = cleanUrl(item.referrer) || url;
@@ -272,8 +305,10 @@ const flags = await chrome.storage.local.get(["globalEnabled", "autoIntercept", 
 if (flags.globalEnabled === false || flags.autoIntercept !== true || flags["site:" + hostOf(pageUrl)] === false) return;
 await chrome.downloads.pause(item.id);
 paused = true;
-const fileName = item.filename?.split(/[\\/]/).pop() || mediaNameFromUrl(url) || mediaNameFromUrl(originalUrl);
-const result = await enqueueLink(url, { fileName, referrer: cleanUrl(item.referrer) || undefined });
+let tab;
+if (observed.tabId >= 0) tab = await chrome.tabs.get(observed.tabId).catch(() => null);
+const fileName = fileNameForDownload(item, observed, tab?.title);
+const result = await enqueueLink(url, { fileName, referrer: cleanUrl(item.referrer) || undefined, pageTitle: tab?.title });
 if (result.ok) {
 await chrome.downloads.cancel(item.id);
 paused = false;
@@ -287,7 +322,12 @@ catch { badge(false, "Flugel Download Manager: resume the download from the brow
 }
 }
 }
-chrome.downloads.onCreated.addListener(item => { void interceptDownload(item); });
+// onCreated may precede the server/browser filename decision (e.g. Google Drive).
+// Leave the browser's suggestion unchanged, then hand off its determined name.
+chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
+suggest();
+void interceptDownload(item);
+});
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
