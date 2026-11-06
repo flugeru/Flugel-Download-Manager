@@ -9,9 +9,9 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
-using Harbor.Core;
+using Flugel.Core;
 
-namespace Harbor.Desktop;
+namespace Flugel.Desktop;
 
 internal static class DesktopSmoke
 {
@@ -79,10 +79,10 @@ internal static class DesktopSmoke
             window.DownloadTable.Focus();
             window.UpdateLayout();
             Check("native download table accepts keyboard focus", window.DownloadTable.IsKeyboardFocusWithin);
-            Check("all requested table columns present", window.DownloadTable.Columns.Count == 5);
+            Check("all requested table columns present", window.DownloadTable.Columns.Count == 9);
             Capture(window, Path.Combine(evidenceDirectory, "desktop-wide.png"));
 
-            window.Width = 800;
+            window.Width = 1000;
             window.Height = 650;
             await window.Dispatcher.InvokeAsync(() => window.UpdateLayout(), DispatcherPriority.ApplicationIdle);
             Check("compact layout retains usable table viewport", window.DownloadTable.ActualWidth >= 650 && window.DownloadTable.ActualHeight >= 110);
@@ -107,6 +107,40 @@ internal static class DesktopSmoke
             Check("Settings rejects 17 segments and accepts 16", settingsRejected17 && settingsAccepted16);
             Check("settings native dialog opens and closes", !settings.IsVisible);
             Check("scheduled transfer remains scheduled", manager.GetSnapshots().Single(item => item.Id == scheduledId).State == DownloadState.Scheduled);
+            var browserReply = SingleInstanceIpc.TrySendAsync(dataDirectory, new IpcRequestMessage
+            {
+                Action = "enqueue-media", Url = server.Url + "browser.mp4", FileName = "browser.mp4", MediaQuality = "1080p"
+            }, 4000);
+            // The dialog deliberately remains open until the pipe acknowledgment arrives.
+            bool browserDialogClosed = false, acknowledgedWhileOpen = false, busyRejected = false;
+            _ = window.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(async () =>
+            {
+                while (true)
+                {
+                    var browserDialog = Application.Current.Windows.OfType<AddDialog>().FirstOrDefault();
+                    if (browserDialog is not null)
+                    {
+                        try
+                        {
+                            var reply = await browserReply.WaitAsync(TimeSpan.FromSeconds(5));
+                            acknowledgedWhileOpen = reply?.Status == "accepted-for-confirmation" && browserDialog.IsVisible;
+                            var busy = await SingleInstanceIpc.TrySendAsync(dataDirectory, new IpcRequestMessage
+                            {
+                                Action = "enqueue-media", Url = server.Url + "second.mp4"
+                            }, 4000);
+                            busyRejected = busy?.Status == "desktop-busy";
+                        }
+                        catch (TimeoutException) { }
+                        finally { browserDialog.Close(); browserDialogClosed = true; }
+                        break;
+                    }
+                    await Task.Delay(50);
+                }
+            }));
+            Check("browser IPC request receives acknowledgment", (await browserReply)?.Status == "accepted-for-confirmation");
+            await WaitForAsync(() => browserDialogClosed);
+            Check("browser IPC acknowledges before confirmation closes", acknowledgedWhileOpen);
+            Check("busy desktop rejects instead of silently dropping capture", busyRejected);
             Check("orderly asynchronous close", await window.StopAsync());
             exitCode = 0;
         }
@@ -153,7 +187,11 @@ internal static class DesktopSmoke
     private static void Capture(Window window, string path)
     {
         window.UpdateLayout();
-        var bitmap = new RenderTargetBitmap((int)Math.Ceiling(window.ActualWidth), (int)Math.Ceiling(window.ActualHeight), 96, 96, PixelFormats.Pbgra32);
+        // Capture at the real display DPI so 125%/150% scaling evidence is not downscaled (UI-01).
+        var dpi = VisualTreeHelper.GetDpi(window);
+        int pixelWidth = Math.Max(1, (int)Math.Ceiling(window.ActualWidth * dpi.DpiScaleX));
+        int pixelHeight = Math.Max(1, (int)Math.Ceiling(window.ActualHeight * dpi.DpiScaleY));
+        var bitmap = new RenderTargetBitmap(pixelWidth, pixelHeight, dpi.PixelsPerInchX, dpi.PixelsPerInchY, PixelFormats.Pbgra32);
         bitmap.Render(window);
         var png = new PngBitmapEncoder();
         png.Frames.Add(BitmapFrame.Create(bitmap));
@@ -161,7 +199,7 @@ internal static class DesktopSmoke
         png.Save(output);
     }
 
-    // ponytail: controlled smoke server is sequential HTTP only; transport conformance belongs in Harbor.Checks.
+    // ponytail: controlled smoke server is sequential HTTP only; transport conformance belongs in Flugel.Checks.
     private sealed class LocalServer : IAsyncDisposable
     {
         internal static readonly byte[] Payload = Enumerable.Range(0, 512 * 1024).Select(i => (byte)(i % 251)).ToArray();

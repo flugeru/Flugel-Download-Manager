@@ -1,0 +1,20 @@
+// WPF takes precedence over WinForms (both enabled for tray/clipboard).
+global using Application = System.Windows.Application;
+global using Binding = System.Windows.Data.Binding;
+global using Button = System.Windows.Controls.Button;
+global using CheckBox = System.Windows.Controls.CheckBox;
+global using ComboBox = System.Windows.Controls.ComboBox;
+global using ContextMenu = System.Windows.Controls.ContextMenu;
+global using DataGrid = System.Windows.Controls.DataGrid;
+global using HorizontalAlignment = System.Windows.HorizontalAlignment;
+global using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+global using Label = System.Windows.Controls.Label;
+global using MenuItem = System.Windows.Controls.MenuItem;
+global using MessageBox = System.Windows.MessageBox;
+global using Orientation = System.Windows.Controls.Orientation;
+global using Panel = System.Windows.Controls.Panel;
+global using RadioButton = System.Windows.Controls.RadioButton;
+global using TabControl = System.Windows.Controls.TabControl;
+global using TabItem = System.Windows.Controls.TabItem;
+global using TextBox = System.Windows.Controls.TextBox;
+global using UserControl = System.Windows.Controls.UserControl;

@@ -1,0 +1,232 @@
+<Window x:Class="Flugel.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Flugel.Desktop"
+        Title="Flugel Download Manager" Width="1280" Height="820" MinWidth="860" MinHeight="560" Style="{StaticResource {x:Type Window}}"
+        WindowStartupLocation="CenterScreen" Closing="Window_Closing">
+  <Window.CommandBindings>
+    <CommandBinding Command="{x:Static local:MainWindow.AddCommand}" Executed="Add_Executed" CanExecute="Always_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.BatchCommand}" Executed="Batch_Executed" CanExecute="Always_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.GrabberCommand}" Executed="Grabber_Executed" CanExecute="Always_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.ImportCommand}" Executed="Import_Executed" CanExecute="Always_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.ExportCommand}" Executed="Export_Executed" CanExecute="Selection_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.ResumeCommand}" Executed="Resume_Executed" CanExecute="Resume_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.PauseCommand}" Executed="Pause_Executed" CanExecute="Pause_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.RemoveCommand}" Executed="Remove_Executed" CanExecute="Selection_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.UpCommand}" Executed="Up_Executed" CanExecute="Selection_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.DownCommand}" Executed="Down_Executed" CanExecute="Selection_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.SettingsCommand}" Executed="Settings_Executed" CanExecute="Always_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.SearchCommand}" Executed="Search_Executed" CanExecute="Always_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.PauseAllCommand}" Executed="PauseAll_Executed" CanExecute="Always_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.ResumeAllCommand}" Executed="ResumeAll_Executed" CanExecute="Always_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.QueueDialogCommand}" Executed="QueueDialog_Executed" CanExecute="Always_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.ToggleSidebarCommand}" Executed="ToggleSidebar_Executed" CanExecute="Always_CanExecute" />
+    <CommandBinding Command="{x:Static local:MainWindow.PropertiesCommand}" Executed="Properties_Executed" CanExecute="Selection_CanExecute" />
+  </Window.CommandBindings>
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <!-- Menu bar -->
+    <Menu Grid.Row="0">
+      <MenuItem Header="_Tasks">
+        <MenuItem Header="_Add URL…" Command="{x:Static local:MainWindow.AddCommand}" />
+        <MenuItem Header="_Batch URLs…" Command="{x:Static local:MainWindow.BatchCommand}" />
+        <MenuItem Header="_Site / media grabber…" Command="{x:Static local:MainWindow.GrabberCommand}" />
+        <Separator />
+        <MenuItem Header="_Import…" Command="{x:Static local:MainWindow.ImportCommand}" />
+        <MenuItem Header="_Export selected…" Command="{x:Static local:MainWindow.ExportCommand}" />
+        <Separator />
+        <MenuItem Header="E_xit" Click="Exit_Click" />
+      </MenuItem>
+      <MenuItem Header="_Downloads">
+        <MenuItem Header="_Resume selected" Command="{x:Static local:MainWindow.ResumeCommand}" />
+        <MenuItem Header="_Pause selected" Command="{x:Static local:MainWindow.PauseCommand}" />
+        <MenuItem Header="Re_move selected" Command="{x:Static local:MainWindow.RemoveCommand}" />
+        <Separator />
+        <MenuItem Header="_Pause all" Command="{x:Static local:MainWindow.PauseAllCommand}" />
+        <MenuItem Header="_Resume all" Command="{x:Static local:MainWindow.ResumeAllCommand}" />
+        <Separator />
+        <MenuItem Header="_Find… (Ctrl+F)" Command="{x:Static local:MainWindow.SearchCommand}" />
+        <MenuItem Header="Find _next (F3)" Click="FindNext_Click" />
+      </MenuItem>
+      <MenuItem Header="_Queues">
+        <MenuItem Header="_Queue manager…" Command="{x:Static local:MainWindow.QueueDialogCommand}" />
+        <Separator />
+        <MenuItem Header="Start _Main queue" Click="StartMainQueue_Click" />
+        <MenuItem Header="Stop _Main queue" Click="StopMainQueue_Click" />
+      </MenuItem>
+      <MenuItem Header="_View">
+        <MenuItem Header="Toggle _categories (Ctrl+Shift+B)" Command="{x:Static local:MainWindow.ToggleSidebarCommand}" />
+        <Separator />
+        <MenuItem Header="_Speed limiter" IsCheckable="True" IsChecked="{Binding SpeedLimiterChecked, Mode=TwoWay}" />
+      </MenuItem>
+      <MenuItem Header="_Settings">
+        <MenuItem Header="_Options… (Ctrl+,)" Command="{x:Static local:MainWindow.SettingsCommand}" />
+        <MenuItem Header="_Queues &amp; scheduler…" Command="{x:Static local:MainWindow.QueueDialogCommand}" />
+      </MenuItem>
+    </Menu>
+
+    <!-- Toolbar -->
+    <ToolBarTray Grid.Row="1">
+      <ToolBar>
+        <Button Command="{x:Static local:MainWindow.AddCommand}" ToolTip="Add URL (Ctrl+N)">
+          <StackPanel Orientation="Horizontal">
+            <Path Data="M12,3 L12,21 M3,12 L21,12" Stroke="{DynamicResource Ink}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Stretch="Uniform" Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" />
+            <TextBlock Text="Add URL" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+        <Button Command="{x:Static local:MainWindow.ResumeCommand}" ToolTip="Resume selected (Ctrl+R)">
+          <StackPanel Orientation="Horizontal">
+            <Path Data="M6,4 L20,12 L6,20 Z" Fill="{DynamicResource Ink}" Stretch="Uniform" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center" />
+            <TextBlock Text="Resume" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+        <Button Command="{x:Static local:MainWindow.PauseCommand}" ToolTip="Pause selected (Ctrl+P)">
+          <StackPanel Orientation="Horizontal">
+            <Path Data="M7,4 L11,4 L11,20 L7,20 Z M13,4 L17,4 L17,20 L13,20 Z" Fill="{DynamicResource Ink}" Stretch="Uniform" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center" />
+            <TextBlock Text="Pause" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+        <Button Command="{x:Static local:MainWindow.RemoveCommand}" ToolTip="Remove from history, keep completed file (Delete)">
+          <StackPanel Orientation="Horizontal">
+            <Path Data="M5,7 L19,7 M9,7 L9,4 L15,4 L15,7 M7,7 L8,20 L16,20 L17,7" Stroke="{DynamicResource Ink}" StrokeThickness="1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Stretch="Uniform" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center" />
+            <TextBlock Text="Remove" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+        <Separator />
+        <Button Content="Move up" Command="{x:Static local:MainWindow.UpCommand}" ToolTip="Move earlier in queue (Alt+Up)" />
+        <Button Content="Move down" Command="{x:Static local:MainWindow.DownCommand}" ToolTip="Move later in queue (Alt+Down)" />
+        <Separator />
+        <Button Content="Batch" Command="{x:Static local:MainWindow.BatchCommand}" ToolTip="Add a batch of URLs (Ctrl+B)" />
+        <Button Content="Grabber" Command="{x:Static local:MainWindow.GrabberCommand}" ToolTip="Inspect a page for links and media (Ctrl+G)" />
+        <Separator />
+        <Button Command="{x:Static local:MainWindow.SettingsCommand}" ToolTip="Options (Ctrl+,)">
+          <StackPanel Orientation="Horizontal">
+            <Path Data="M12,8 A4,4 0 1,0 12,16 A4,4 0 1,0 12,8 M12,2 L13,5 L11,5 Z M12,22 L13,19 L11,19 Z M2,12 L5,13 L5,11 Z M22,12 L19,11 L19,13 Z" Stroke="{DynamicResource Ink}" StrokeThickness="1.6" Stretch="Uniform" Width="15" Height="15" Margin="0,0,6,0" VerticalAlignment="Center" />
+            <TextBlock Text="Settings" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
+        <Separator />
+        <TextBlock Text="Find:" VerticalAlignment="Center" Margin="4,0,4,0" Foreground="{DynamicResource Muted}" />
+        <TextBox x:Name="SearchBox" Width="200" VerticalAlignment="Center" KeyDown="SearchBox_KeyDown" ToolTip="Filter by file name or URL (Enter / F3)" AutomationProperties.Name="Search downloads" />
+      </ToolBar>
+    </ToolBarTray>
+
+    <!-- Body: sidebar + table -->
+    <Grid Grid.Row="2">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <Border x:Name="Sidebar" Grid.Column="0" Background="{DynamicResource SidebarBg}" BorderBrush="{DynamicResource Line}" BorderThickness="0,1,1,0" Width="216">
+        <DockPanel>
+          <DockPanel DockPanel.Dock="Top" Margin="12,12,12,8">
+            <Button DockPanel.Dock="Right" Content="—" Click="ToggleSidebar_Click" ToolTip="Hide categories (Ctrl+Shift+B)" Padding="8,2" MinWidth="28" />
+            <TextBlock Text="Categories" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center" />
+          </DockPanel>
+          <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <TreeView x:Name="CategoryTree" BorderThickness="0" Background="Transparent" SelectedItemChanged="CategoryTree_SelectedItemChanged" Padding="6,0">
+              <TreeViewItem Header="All downloads" IsSelected="True" Tag="All" />
+              <TreeViewItem Header="Unfinished" Tag="State:Queued" />
+              <TreeViewItem Header="Finished" Tag="State:Completed" />
+              <TreeViewItem Header="Categories" IsExpanded="True">
+                <TreeViewItem Header="Compressed" Tag="Category:Compressed" />
+                <TreeViewItem Header="Documents" Tag="Category:Documents" />
+                <TreeViewItem Header="Music" Tag="Category:Music" />
+                <TreeViewItem Header="Programs" Tag="Category:Programs" />
+                <TreeViewItem Header="Video" Tag="Category:Video" />
+                <TreeViewItem Header="General" Tag="Category:General" />
+              </TreeViewItem>
+              <TreeViewItem Header="Queues" IsExpanded="True">
+                <TreeViewItem Header="Main" Tag="Queue:Main" />
+                <TreeViewItem Header="Synchronization" Tag="Queue:Synchronization" />
+              </TreeViewItem>
+            </TreeView>
+          </ScrollViewer>
+        </DockPanel>
+      </Border>
+
+      <Grid Grid.Column="1">
+        <DataGrid x:Name="Downloads" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False"
+                  SelectionMode="Single" SelectionUnit="FullRow" HeadersVisibility="Column" GridLinesVisibility="None"
+                  BorderThickness="0" Background="White" RowBackground="White"
+                  AlternatingRowBackground="#F8FAFC" MinRowHeight="36" EnableRowVirtualization="True" EnableColumnVirtualization="True"
+                  SelectionChanged="Downloads_SelectionChanged" AutomationProperties.Name="Downloads" CanUserSortColumns="True"
+                  MouseDoubleClick="Downloads_MouseDoubleClick" MouseRightButtonUp="Downloads_MouseRightButtonUp"
+                  PreviewKeyDown="Downloads_PreviewKeyDown">
+          <DataGrid.Resources>
+            <Style x:Key="CellText" TargetType="TextBlock">
+              <Setter Property="Margin" Value="0" />
+              <Setter Property="VerticalAlignment" Value="Center" />
+              <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            </Style>
+          </DataGrid.Resources>
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="File name" Binding="{Binding Value.FileName}" Width="2*" MinWidth="170" ElementStyle="{StaticResource CellText}" />
+            <DataGridTextColumn Header="Category" Binding="{Binding Value.Category}" Width="90" ElementStyle="{StaticResource CellText}" />
+            <DataGridTextColumn Header="Size" Binding="{Binding Value.SizeText}" Width="90" ElementStyle="{StaticResource CellText}" />
+            <DataGridTemplateColumn Header="Progress" Width="1.6*" MinWidth="150">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate>
+                  <StackPanel Margin="0,4">
+                    <TextBlock Text="{Binding Value.ProgressText}" FontSize="11.5" Margin="0,0,0,3" />
+                    <ProgressBar Value="{Binding Value.Percent, Mode=OneWay}" Maximum="100" Height="4" Foreground="{DynamicResource Accent}" Background="#DDE9EE"
+                                 IsIndeterminate="{Binding IsIndeterminate}" AutomationProperties.Name="Download progress" />
+                  </StackPanel>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTextColumn Header="Speed" Binding="{Binding Value.SpeedText}" Width="92" ElementStyle="{StaticResource CellText}" />
+            <DataGridTextColumn Header="Time left" Binding="{Binding Value.EtaText}" Width="86" ElementStyle="{StaticResource CellText}" />
+            <DataGridTextColumn Header="Queue" Binding="{Binding Value.QueueName}" Width="84" ElementStyle="{StaticResource CellText}" />
+            <DataGridTextColumn Header="Last try" Binding="{Binding Value.LastAttemptText}" Width="140" ElementStyle="{StaticResource CellText}" />
+            <DataGridTextColumn Header="State" Binding="{Binding Value.State}" Width="96" ElementStyle="{StaticResource CellText}" />
+          </DataGrid.Columns>
+        </DataGrid>
+        <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False" Margin="20">
+          <TextBlock x:Name="EmptyTitle" Text="Room for your next download" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" />
+          <TextBlock Text="Add an HTTP or HTTPS link, batch URLs, or grab media from a page." Foreground="{DynamicResource Muted}" Margin="0,8,0,0" TextAlignment="Center" TextWrapping="Wrap" />
+        </StackPanel>
+      </Grid>
+    </Grid>
+
+    <!-- Details panel -->
+    <Border Grid.Row="3" BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0" Background="White" Padding="16,10">
+      <DockPanel>
+        <Button DockPanel.Dock="Right" Content="Properties…" Command="{x:Static local:MainWindow.PropertiesCommand}" VerticalAlignment="Top" Margin="12,0,0,0" />
+        <StackPanel>
+          <Border x:Name="ErrorBanner" Background="#FFF0F1" BorderBrush="#E9B4BE" BorderThickness="1" CornerRadius="3" Padding="10,7" Margin="0,0,0,8" Visibility="Collapsed">
+            <DockPanel>
+              <Button DockPanel.Dock="Right" Content="Dismiss" Click="Dismiss_Click" Margin="10,0,0,0" />
+              <TextBlock x:Name="ErrorText" Foreground="#87243A" TextWrapping="Wrap" VerticalAlignment="Center" AutomationProperties.LiveSetting="Assertive" />
+            </DockPanel>
+          </Border>
+          <TextBlock x:Name="DetailTitle" Text="Transfer details" FontWeight="SemiBold" FontSize="14" Margin="0,0,0,3" />
+          <TextBox x:Name="DetailSource" Text="Select a download to see its source and destination." Style="{StaticResource DetailText}" AutomationProperties.Name="Source URL (query and credentials hidden)" />
+          <TextBox x:Name="DetailDestination" Style="{StaticResource DetailText}" AutomationProperties.Name="Destination" />
+          <TextBlock x:Name="DetailMeta" Foreground="{DynamicResource Muted}" FontSize="11.5" TextWrapping="Wrap" Margin="0,3,0,0" />
+          <TextBox x:Name="DetailError" Style="{StaticResource DetailText}" Foreground="{DynamicResource Danger}" MaxHeight="52" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Transfer error" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- Status bar -->
+    <Border Grid.Row="4" Background="White" BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0" Padding="16,7">
+      <DockPanel>
+        <TextBlock x:Name="CountSummary" Text="0 downloads" Foreground="{DynamicResource Muted}" FontSize="11.5" DockPanel.Dock="Left" />
+        <TextBlock x:Name="StatusText" Text="Files stay yours. Removing history never deletes completed files." Foreground="{DynamicResource Muted}" FontSize="11.5" TextAlignment="Right" TextWrapping="Wrap" DockPanel.Dock="Right" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+          <TextBlock x:Name="TransferSpeed" Text="0 B/s" Foreground="{DynamicResource AccentDark}" FontSize="12" FontWeight="SemiBold" />
+          <TextBlock x:Name="ActiveSummary" Text="No active transfers" Foreground="{DynamicResource Muted}" FontSize="11.5" Margin="12,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+  </Grid>
+</Window>

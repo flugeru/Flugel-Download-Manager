@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
-using Harbor.Core;
+using Flugel.Core;
 
 if (args is ["--crash-child", var childState, var childOutput, var childUrl, var marker])
 {
@@ -162,7 +162,7 @@ await Check("partial length mismatch restarts safely", async () =>
     var p = Paths("partial-length"); string id;
     await using (var m = new DownloadManager(p.state))
     { id = m.Add(server.Url("slow-length"), p.output, "length.bin"); await Wait(m, id, s => s.Received > 256 * 1024); }
-    var part = Directory.GetFiles(Path.Combine(p.output, ".streamharbor-" + id), "*.part")[0];
+    var part = Directory.GetFiles(Path.Combine(p.output, ".flugel-download-manager-" + id), "*.part")[0];
     await File.AppendAllTextAsync(part, "junk");
     await using var resumed = new DownloadManager(p.state); resumed.Resume(id);
     await Verify(await Wait(resumed, id), TestServer.SlowSize);
@@ -246,7 +246,7 @@ await Check("remove active safe; completed file preserved", async () =>
     var p = Paths("remove"); await using var m = new DownloadManager(p.state);
     string active = m.Add(server.Url("slow-remove"), p.output, "active.bin");
     await Wait(m, active, s => s.Received > 0); m.Remove(active); await Task.Delay(300);
-    Assert(m.GetSnapshots().Count == 0 && !Directory.Exists(Path.Combine(p.output, ".streamharbor-" + active)), "Active partial not cleaned");
+    Assert(m.GetSnapshots().Count == 0 && !Directory.Exists(Path.Combine(p.output, ".flugel-download-manager-" + active)), "Active partial not cleaned");
     string completed = m.Add(server.Url("range-remove"), p.output, "completed.bin");
     var done = await Wait(m, completed); await Verify(done, TestServer.NormalSize); m.Remove(completed);
     Assert(File.Exists(done.Destination), "Remove deleted completed file");
@@ -319,7 +319,222 @@ await Check("structured logs exclude secrets and URL", async () =>
     foreach (var line in logs.Split('\n', StringSplitOptions.RemoveEmptyEntries)) using (System.Text.Json.JsonDocument.Parse(line)) { }
 });
 
-string report = $"# Harbor production-engine checks\n\nExecuted: {DateTimeOffset.UtcNow:O}\n\nRuntime: {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}; {System.Runtime.InteropServices.RuntimeInformation.OSDescription}\n\nCommand: `dotnet run --project app/Harbor.Checks/Harbor.Checks.csproj -c Release`\n\n" +
+await Check("category auto-classification and subfolder routing", async () =>
+{
+    var p = Paths("categories");
+    await using var m = new DownloadManager(p.state);
+    Assert(DownloadManager.ClassifyFileCategory("archive.zip") == "Compressed", "zip not Compressed");
+    Assert(DownloadManager.ClassifyFileCategory("report.pdf") == "Documents", "pdf not Documents");
+    Assert(DownloadManager.ClassifyFileCategory("song.mp3") == "Music", "mp3 not Music");
+    Assert(DownloadManager.ClassifyFileCategory("installer.exe") == "Programs", "exe not Programs");
+    Assert(DownloadManager.ClassifyFileCategory("movie.mp4") == "Video", "mp4 not Video");
+    var id = m.AddWithOptions(new AddDownloadOptions
+    {
+        Url = server.Url("range-cat"),
+        DestinationDirectory = p.output,
+        FileName = "clip.mp4",
+        UseCategorySubfolder = true
+    });
+    var snap = await Wait(m, id);
+    await Verify(snap, TestServer.NormalSize);
+    Assert(snap.Category == "Video" && snap.Destination == Path.Combine(p.output, "Video", "clip.mp4"), "Category subfolder routing failed");
+});
+
+await Check("named queues start stop and per-queue concurrency", async () =>
+{
+    var p = Paths("named-queues");
+    await using var m = new DownloadManager(p.state);
+    var syncId = m.AddWithOptions(new AddDownloadOptions
+    {
+        Url = server.Url("range-sync"),
+        DestinationDirectory = p.output,
+        FileName = "sync.bin",
+        QueueName = "Synchronization",
+        StartImmediately = true
+    });
+    await Task.Delay(250);
+    // Synchronization queue starts stopped by default
+    Assert(m.GetSnapshots().Single(s => s.Id == syncId).State == DownloadState.Queued, "Stopped queue started job prematurely");
+    m.StartQueue("Synchronization");
+    await Verify(await Wait(m, syncId), TestServer.NormalSize);
+});
+
+await Check("per-download speed limiter caps throughput", async () =>
+{
+    var p = Paths("speed-limit");
+    await using var m = new DownloadManager(p.state);
+    var sw = Stopwatch.StartNew();
+    var id = m.AddWithOptions(new AddDownloadOptions
+    {
+        Url = server.Url("sequential"),
+        DestinationDirectory = p.output,
+        FileName = "throttled.bin",
+        Segments = 1,
+        MaxBytesPerSecond = 1500 * 1024 // ~1.5 MiB/s for 2 MiB file -> >= 1.0s
+    });
+    await Verify(await Wait(m, id), TestServer.NormalSize);
+    Assert(sw.Elapsed.TotalSeconds >= 0.9, $"Speed limiter did not throttle ({sw.Elapsed.TotalSeconds:0.00}s)");
+});
+
+await Check("Content-Disposition server filename resolution", async () =>
+{
+    var p = Paths("disposition");
+    await using var m = new DownloadManager(p.state);
+    var id = m.AddWithOptions(new AddDownloadOptions
+    {
+        Url = server.Url("disposition"),
+        DestinationDirectory = p.output,
+        ResolveServerFileName = true
+    });
+    var snap = await Wait(m, id);
+    await Verify(snap, TestServer.NormalSize);
+    Assert(snap.FileName == "server-named-archive.zip", $"Expected server-named-archive.zip, got {snap.FileName}");
+});
+
+await Check("request context headers and basic auth without log leak", async () =>
+{
+    var p = Paths("auth-context");
+    await using var m = new DownloadManager(p.state);
+    var id = m.AddWithOptions(new AddDownloadOptions
+    {
+        Url = server.Url("auth-check"),
+        DestinationDirectory = p.output,
+        FileName = "authed.bin",
+        Referrer = "https://portal.example.org/downloads",
+        UserAgent = "FlugelTest/2.0",
+        BasicAuthUser = "alice",
+        BasicAuthPassword = "SuperSecretPassword123"
+    });
+    await Verify(await Wait(m, id), TestServer.NormalSize);
+    var logs = await File.ReadAllTextAsync(Path.Combine(p.state, "events.jsonl"));
+    Assert(!logs.Contains("SuperSecretPassword123") && !logs.Contains("alice"), "Auth leaked to events.jsonl");
+});
+
+await Check("batch wildcard URL expansion numeric and alphabetic", () =>
+{
+    var num = BatchUrlExpander.ExpandNumeric("https://example.org/media/img*.jpg", 1, 5, 3);
+    Assert(num.Urls.Count == 5 && num.FirstUrl == "https://example.org/media/img001.jpg" && num.LastUrl == "https://example.org/media/img005.jpg", "Numeric batch failed");
+    var alpha = BatchUrlExpander.ExpandAlphabetic("https://example.org/files/part_*.bin", 'a', 'd');
+    Assert(alpha.Urls.Count == 4 && alpha.FirstUrl == "https://example.org/files/part_a.bin" && alpha.LastUrl == "https://example.org/files/part_d.bin", "Alpha batch failed");
+    return Task.CompletedTask;
+});
+
+await Check("HLS master and media playlist download and DRM rejection", async () =>
+{
+    var p = Paths("hls");
+    await using var m = new DownloadManager(p.state);
+    var id = m.AddWithOptions(new AddDownloadOptions
+    {
+        Url = server.Url("master.m3u8"),
+        DestinationDirectory = p.output,
+        FileName = "stream-1080p.ts"
+    });
+    var snap = await Wait(m, id);
+    Assert(snap.State == DownloadState.Completed, $"HLS download failed: {snap.Error}");
+    Assert(new FileInfo(snap.Destination).Length == TestServer.NormalSize * 2, "HLS concatenated segment length mismatch");
+
+    var drmId = m.AddWithOptions(new AddDownloadOptions
+    {
+        Url = server.Url("drm.m3u8"),
+        DestinationDirectory = p.output,
+        FileName = "drm.ts"
+    });
+    var drmSnap = await Wait(m, drmId);
+    Assert(drmSnap.State == DownloadState.Failed && (drmSnap.Error?.Contains("Protected") ?? false), "DRM HLS playlist was not rejected");
+});
+
+await Check("DASH MPD manifest parsing and ContentProtection detection", () =>
+{
+    string clearMpd = """
+        <?xml version="1.0"?>
+        <MPD xmlns="urn:mpeg:dash:schema:mpd:2011">
+          <Period>
+            <AdaptationSet mimeType="video/mp4">
+              <Representation id="1080p" width="1920" height="1080" bandwidth="4500000" codecs="avc1.640028">
+                <BaseURL>video_1080p.mp4</BaseURL>
+              </Representation>
+              <Representation id="720p" width="1280" height="720" bandwidth="2200000" codecs="avc1.4d401f">
+                <BaseURL>video_720p.mp4</BaseURL>
+              </Representation>
+            </AdaptationSet>
+          </Period>
+        </MPD>
+        """;
+    var (prot1, vars1) = HlsAndDashParser.ParseDashMpd(clearMpd, new Uri("https://cdn.example.org/media/manifest.mpd"));
+    Assert(!prot1 && vars1.Count == 2 && vars1[0].QualityLabel == "1080p" && vars1[0].Url == "https://cdn.example.org/media/video_1080p.mp4", "Clear DASH parse failed");
+
+    string drmMpd = """
+        <?xml version="1.0"?>
+        <MPD xmlns="urn:mpeg:dash:schema:mpd:2011">
+          <Period>
+            <AdaptationSet mimeType="video/mp4">
+              <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"/>
+              <Representation id="1" width="1920" height="1080" bandwidth="4000000"><BaseURL>enc.mp4</BaseURL></Representation>
+            </AdaptationSet>
+          </Period>
+        </MPD>
+        """;
+    var (prot2, _) = HlsAndDashParser.ParseDashMpd(drmMpd, new Uri("https://cdn.example.org/media/drm.mpd"));
+    Assert(prot2, "DASH ContentProtection not flagged");
+    return Task.CompletedTask;
+});
+
+await Check("Site Grabber discovers page links and HLS variants", async () =>
+{
+    var p = Paths("grabber");
+    await using var m = new DownloadManager(p.state);
+    var items = await m.InspectSiteAsync(server.Url("grabber-page.html"));
+    Assert(items.Any(i => i.FileName == "archive.zip" && i.Category == "Compressed"), "Grabber missed archive.zip");
+    Assert(items.Any(i => i.FileName == "lecture.mp4" && i.Category == "Video"), "Grabber missed lecture.mp4");
+    Assert(items.Any(i => i.Kind == "HLS Stream" && i.Label.Contains("1080p")), "Grabber missed HLS 1080p variant");
+});
+
+await Check("Import and Export structured and text lists", async () =>
+{
+    var p = Paths("import-export");
+    string exportJson = Path.Combine(p.output, "list.shb.json");
+    string exportTxt = Path.Combine(p.output, "list.txt");
+    await using (var m1 = new DownloadManager(p.state))
+    {
+        m1.AddWithOptions(new AddDownloadOptions
+        {
+            Url = server.Url("range-exp1"),
+            DestinationDirectory = p.output,
+            FileName = "one.bin",
+            Description = "First item",
+            StartImmediately = false
+        });
+        m1.ExportFlugelFile(exportJson);
+        m1.ExportUrlList(exportTxt);
+    }
+    var p2 = Paths("import-target");
+    await using var m2 = new DownloadManager(p2.state);
+    int imported = m2.ImportFromFile(exportJson, p2.output, "Main", startImmediately: false);
+    Assert(imported == 1 && m2.GetSnapshots().Single().Description == "First item", "Structured import failed");
+});
+
+await Check("Single-instance Named Pipe IPC concurrent forwarding", async () =>
+{
+    var p = Paths("ipc-test");
+    var received = new ConcurrentBag<string>();
+    await using var ipcServer = new SingleInstanceIpcServer(p.state, req =>
+    {
+        if (req.Url is not null) received.Add(req.Url);
+        return Task.FromResult(new IpcResponseMessage
+        {
+            Status = "accepted-for-confirmation",
+            ForwardedToRunningInstance = true,
+            BrowserAutoIntercept = true,
+            BrowserVideoBalloonEnabled = true
+        });
+    });
+    var tasks = Enumerable.Range(1, 5).Select(i =>
+        SingleInstanceIpc.TrySendAsync(p.state, new IpcRequestMessage { Action = "enqueue", Url = $"https://example.org/file{i}.zip" }));
+    var replies = await Task.WhenAll(tasks);
+    Assert(replies.All(r => r is { Status: "accepted-for-confirmation", ForwardedToRunningInstance: true }) && received.Count == 5, "IPC concurrent forwarding failed");
+});
+
+string report = $"# Flugel Download Manager production-engine checks\n\nExecuted: {DateTimeOffset.UtcNow:O}\n\nRuntime: {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}; {System.Runtime.InteropServices.RuntimeInformation.OSDescription}\n\nCommand: `dotnet run --project app/Flugel.Checks/Flugel.Checks.csproj -c Release`\n\n" +
     string.Join("\n", results.Select(r => "- " + r)) + $"\n\nTotal: {results.Count - failed}/{results.Count} passed.\n\nArtifacts: `{root}`\n\nLimitations: local HTTP only; no public TLS/proxy integration, power-loss durability simulation, GUI, or browser checks. Real child-process termination exercised; power-loss persistence not claimed. Memory bounded by fixed 64 KiB transfer buffers per segment plus fixed copy buffers; 64 MiB file hashed without whole-file allocation. Destination volume needs space for partials plus assembled file before atomic publication. External mutation of private partials by same-user software is outside trust boundary; length checked, not cryptographically authenticated.\n";
 var reportPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "RESULTS.md");
 await File.WriteAllTextAsync(Path.GetFullPath(reportPath), report);
@@ -366,6 +581,55 @@ sealed class TestServer : IAsyncDisposable
             { var values = range[6..].Split('-'); from = long.Parse(values[0]); to = long.Parse(values[1]); }
             lock (requests) requests.Add(new RequestInfo(path, from, to));
             int count = counts.AddOrUpdate(path, 1, (_, value) => value + 1);
+            if (path == "master.m3u8")
+            {
+                string body = $"#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=4500000,RESOLUTION=1920x1080\n{Url("stream-1080p.m3u8")}\n#EXT-X-STREAM-INF:BANDWIDTH=1500000,RESOLUTION=1280x720\n{Url("stream-720p.m3u8")}\n";
+                byte[] b = Encoding.UTF8.GetBytes(body);
+                await Head(200, $"Content-Type: application/vnd.apple.mpegurl\r\nContent-Length: {b.Length}\r\n");
+                await stream.WriteAsync(b, stop.Token);
+                return;
+            }
+            if (path is "stream-1080p.m3u8" or "stream-720p.m3u8")
+            {
+                string body = $"#EXTM3U\n#EXT-X-TARGETDURATION:4\n#EXTINF:4.0,\n{Url("seg1.ts")}\n#EXTINF:4.0,\n{Url("seg2.ts")}\n#EXT-X-ENDLIST\n";
+                byte[] b = Encoding.UTF8.GetBytes(body);
+                await Head(200, $"Content-Type: application/vnd.apple.mpegurl\r\nContent-Length: {b.Length}\r\n");
+                await stream.WriteAsync(b, stop.Token);
+                return;
+            }
+            if (path == "drm.m3u8")
+            {
+                string body = $"#EXTM3U\n#EXT-X-KEY:METHOD=SAMPLE-AES,URI=\"https://license.example.org/key\"\n#EXTINF:4.0,\n{Url("seg1.ts")}\n#EXT-X-ENDLIST\n";
+                byte[] b = Encoding.UTF8.GetBytes(body);
+                await Head(200, $"Content-Type: application/vnd.apple.mpegurl\r\nContent-Length: {b.Length}\r\n");
+                await stream.WriteAsync(b, stop.Token);
+                return;
+            }
+            if (path == "grabber-page.html")
+            {
+                string html = $"""
+                    <!doctype html>
+                    <html><body>
+                      <a href="/files/archive.zip">Archive</a>
+                      <video src="/media/lecture.mp4"></video>
+                      <source src="/master.m3u8" type="application/vnd.apple.mpegurl" />
+                    </body></html>
+                    """;
+                byte[] b = Encoding.UTF8.GetBytes(html);
+                await Head(200, $"Content-Type: text/html; charset=utf-8\r\nContent-Length: {b.Length}\r\n");
+                await stream.WriteAsync(b, stop.Token);
+                return;
+            }
+            if (path == "auth-check")
+            {
+                if (!headers.TryGetValue("Authorization", out string? auth) || !auth.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase) ||
+                    !headers.TryGetValue("Referer", out string? refH) || !refH.Contains("portal.example.org") ||
+                    !headers.TryGetValue("User-Agent", out string? ua) || !ua.Contains("FlugelTest/2.0"))
+                {
+                    await Head(401, "Content-Length: 0\r\n");
+                    return;
+                }
+            }
             if (path == "redirect") { await Head(302, "Location: " + Url("range-redirect") + "\r\nContent-Length: 0\r\n"); return; }
             if (path == "redirect-loop") { await Head(302, "Location: " + Url("redirect-loop") + "\r\nContent-Length: 0\r\n"); return; }
             if (path == "416" && from is not null && !(from == 0 && to == 0))
@@ -384,7 +648,8 @@ sealed class TestServer : IAsyncDisposable
             if (path == "malformed") contentRange = "Content-Range: nonsense\r\n";
             if (path == "wrong" && !probe && ranged) contentRange = $"Content-Range: bytes {start + 1}-{end}/{size}\r\n";
             bool chunked = path == "unknown";
-            await Head(ranged ? 206 : 200, validator + (path == "encoded" ? "Content-Encoding: gzip\r\n" : "") + "Accept-Ranges: bytes\r\n" + contentRange + (chunked ? "Transfer-Encoding: chunked\r\n" : $"Content-Length: {length}\r\n"));
+            string disp = path == "disposition" ? "Content-Disposition: attachment; filename=\"server-named-archive.zip\"\r\n" : "";
+            await Head(ranged ? 206 : 200, validator + disp + (path == "encoded" ? "Content-Encoding: gzip\r\n" : "") + "Accept-Ranges: bytes\r\n" + contentRange + (chunked ? "Transfer-Encoding: chunked\r\n" : $"Content-Length: {length}\r\n"));
             bool drop = path == "drop" && !probe && count <= 2;
             long sent = 0; byte[] buffer = new byte[32768];
             while (sent < length)

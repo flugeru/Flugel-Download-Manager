@@ -2,7 +2,7 @@ using System.Buffers.Binary;
 using System.Text;
 using System.Text.Json;
 
-namespace Harbor.NativeHost;
+namespace Flugel.NativeHost;
 
 internal static class SelfTests
 {
@@ -87,7 +87,7 @@ internal static class SelfTests
             Check("safe argument list and isolated child stdout", () =>
             {
                 const string url = "https://example.test/?q=%22&command=calc.exe";
-                var info = Program.DesktopStartInfo(@"C:\Harbor Space\Harbor.Desktop\StreamHarbor.exe", url);
+                var info = Program.DesktopStartInfo(@"C:\Flugel Download Manager Space\Flugel.Desktop\FlugelDownloadManager.exe", url);
                 Assert(!info.UseShellExecute && info.Arguments == "");
                 Assert(info.ArgumentList.SequenceEqual(new[] { "--url", url }));
                 Assert(info.RedirectStandardOutput && info.RedirectStandardError && info.RedirectStandardInput);
@@ -134,6 +134,80 @@ internal static class SelfTests
                 output.Position = 0;
                 using var reply = JsonDocument.Parse(Program.ReadFrame(output)!);
                 Assert(reply.RootElement.GetProperty("error").GetString() == "desktop-unavailable");
+            });
+            Check("enqueue-media and ping structured messages", () =>
+            {
+                var mediaMsg = JsonSerializer.SerializeToUtf8Bytes(new
+                {
+                    version = 1,
+                    action = "enqueue-media",
+                    url = "https://cdn.example.test/video.m3u8",
+                    fileName = "lecture-1080p.ts",
+                    referrer = "https://portal.example.test/watch",
+                    pageTitle = "Lecture 1",
+                    mediaQuality = "1080p HLS",
+                    segmentUrls = new[] { "https://cdn.example.test/seg1.ts", "https://cdn.example.test/seg2.ts" }
+                });
+                var parsed = Program.ParseStructuredRequest(mediaMsg);
+                Assert(parsed.Action == "enqueue-media" && parsed.FileName == "lecture-1080p.ts" && parsed.SegmentUrls?.Count == 2);
+
+                var pingMsg = JsonSerializer.SerializeToUtf8Bytes(new { version = 1, action = "ping" });
+                using var outPing = new MemoryStream();
+                Assert(Program.RunWithPayload(new MemoryStream(Frame(pingMsg)), outPing, _ => throw new Exception("Ping must not launch")) == 0);
+                outPing.Position = 0;
+                using var pingReply = JsonDocument.Parse(Program.ReadFrame(outPing)!);
+                Assert(pingReply.RootElement.GetProperty("status").GetString() == "ready");
+            });
+            Check("direct MP4 from browser with null optional metadata", () =>
+            {
+                var body = JsonSerializer.SerializeToUtf8Bytes(new
+                {
+                    version = 1, action = "enqueue-media", url = "https://cdn.example.test/588340.mp4",
+                    fileName = "588340.mp4", referrer = "https://portal.example.test/watch",
+                    pageTitle = "Episode", mediaQuality = "1080p", segmentUrls = (string[]?)null
+                });
+                var request = Program.ParseStructuredRequest(body);
+                Assert(request.MediaQuality == "1080p" && request.SegmentUrls is null);
+                using var output = new MemoryStream();
+                Assert(Program.RunWithPayload(new MemoryStream(Frame(body)), output, req => req == request) == 0);
+                output.Position = 0;
+                using var reply = JsonDocument.Parse(Program.ReadFrame(output)!);
+                Assert(reply.RootElement.GetProperty("status").GetString() == "accepted-for-confirmation");
+                Reject(() => Program.ParseStructuredRequest(Encoding.UTF8.GetBytes(
+                    "{\"version\":1,\"action\":\"enqueue-media\",\"url\":\"https://example.test/video.mp4\",\"segmentUrls\":42}")));
+            });
+            Check("busy desktop preserves rejection reason", () =>
+            {
+                using var output = new MemoryStream();
+                Assert(Program.Run(new MemoryStream(Frame(Request("https://example.test/video.mp4"))), output,
+                    _ => throw new Program.DesktopRejection("desktop-busy")) == 0);
+                output.Position = 0;
+                using var reply = JsonDocument.Parse(Program.ReadFrame(output)!);
+                Assert(reply.RootElement.GetProperty("error").GetString() == "desktop-busy");
+            });
+            Check("session cookie accepted only on enqueue-media and rejected when unsafe", () =>
+            {
+                var ok = JsonSerializer.SerializeToUtf8Bytes(new
+                {
+                    version = 1, action = "enqueue-media", url = "https://nuvem.example.test/a.mkv", cookie = "session=abc; lang=pt"
+                });
+                Assert(Program.ParseStructuredRequest(ok).CookieHeader == "session=abc; lang=pt");
+                Reject(() => Program.ParseStructuredRequest(JsonSerializer.SerializeToUtf8Bytes(new
+                {
+                    version = 1, action = "enqueue-media", url = "https://nuvem.example.test/a.mkv", cookie = "a=1\r\nX-Injected: 1"
+                })));
+                Reject(() => Program.ParseStructuredRequest(JsonSerializer.SerializeToUtf8Bytes(new
+                {
+                    version = 1, action = "enqueue", url = "https://nuvem.example.test/a.mkv", cookie = "a=1"
+                })));
+                Reject(() => Program.ParseStructuredRequest(JsonSerializer.SerializeToUtf8Bytes(new
+                {
+                    version = 1, action = "enqueue-media", url = "https://nuvem.example.test/a.mkv", cookie = "a=" + new string('x', 8200)
+                })));
+                Reject(() => Program.ParseStructuredRequest(JsonSerializer.SerializeToUtf8Bytes(new
+                {
+                    version = 1, action = "enqueue-media", url = "https://nuvem.example.test/a.mkv", cookie = "novalue"
+                })));
             });
             Console.WriteLine($"PASS {count} self-tests; no desktop launched.");
             return 0;

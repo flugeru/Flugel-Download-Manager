@@ -3,12 +3,13 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AssemblyName>StreamHarbor</AssemblyName>
-    <RootNamespace>Harbor.Desktop</RootNamespace>
+    <AssemblyName>FlugelDownloadManager</AssemblyName>
+    <RootNamespace>Flugel.Desktop</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Harbor.Core\Harbor.Core.csproj" />
+    <ProjectReference Include="..\Flugel.Core\Flugel.Core.csproj" />
   </ItemGroup>
 </Project>
