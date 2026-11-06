@@ -1,22 +1,22 @@
-# StreamHarbor
+# Flugel Download Manager
 
 Independent Windows download manager. Original C#/.NET 10 implementation, native WPF desktop, resumable segmented HTTP transfers, queue/scheduling, persistent state and optional original browser bridge. Not IDM, not binary-compatible, not complete feature parity.
 
 ## Run compiled build
 
-Executable: `artifacts\Harbor.Desktop\StreamHarbor.exe`.
+Executable: `artifacts\Flugel.Desktop\FlugelDownloadManager.exe`.
 
 Requires Windows x64 and **.NET 10 Windows Desktop Runtime**. Entire published folder required, not executable alone. Installed machine already has runtime 10.0.13. No original application needed; IDM was exited before reconstruction validation. Build is unsigned, local framework-dependent release, not installer/MSIX or production-certified distribution.
 
-1. Launch `artifacts\Harbor.Desktop\StreamHarbor.exe`.
+1. Launch `artifacts\Flugel.Desktop\FlugelDownloadManager.exe`.
 2. Choose **Add URL**, enter HTTP(S) URL and destination, optional filename/segments/schedule, then confirm.
 3. Select row for Pause/Resume, queue ordering or details. Settings controls concurrency, default segments, retries and destination.
 4. Close normally to flush state. Relaunch then Resume interrupted jobs. Scheduled downloads need app running.
 
-Default state: `%LOCALAPPDATA%\StreamHarbor`. Isolated profile:
+Default state: `%LOCALAPPDATA%\Flugel Download Manager`. Isolated profile:
 
 ```powershell
-.\artifacts\Harbor.Desktop\StreamHarbor.exe --data-dir "C:\Your Folder\HarborData"
+.\artifacts\Flugel.Desktop\FlugelDownloadManager.exe --data-dir "C:\Your Folder\Flugel Download ManagerData"
 ```
 
 One process per data directory. No existing-instance browser IPC forwarding yet. `--url "https://example.org/file.zip"` prefills Add confirmation; never silently downloads. Existing destination files are never overwritten; choose another filename. Keep enough free space for partials plus assembled result. URL query parameters persist in profile state and can appear in process arguments; avoid secret-bearing links if same-user exposure unacceptable. Downloaded files never execute automatically.
@@ -29,7 +29,7 @@ Requirements: .NET SDK **10.0.402** (pinned `global.json`), Windows x64; Node on
 
 ```powershell
 .\build.ps1
-node .\browser\checks.cjs .\artifacts\Harbor.NativeHost\Harbor.NativeHost.exe
+node .\browser\checks.cjs .\artifacts\Flugel.NativeHost\Flugel.NativeHost.exe
 .\verify-release.ps1
 ```
 
@@ -38,12 +38,12 @@ node .\browser\checks.cjs .\artifacts\Harbor.NativeHost\Harbor.NativeHost.exe
 Real UI smoke (use new directory):
 
 ```powershell
-.\artifacts\Harbor.Desktop\StreamHarbor.exe --data-dir "C:\Your Folder\NewHarborSmoke" --smoke-test
+.\artifacts\Flugel.Desktop\FlugelDownloadManager.exe --data-dir "C:\Your Folder\NewFlugel Download ManagerSmoke" --smoke-test
 ```
 
 Creates loopback fixture, exercises native windows and production engine, records app-only PNGs/JSON under profile `ui-evidence`, then exits. Exit code 0 means pass. Does not install browser extension or change original application.
 
-Real native-host/desktop confirmation regression (fresh directory, opens/cancels own window): `./browser/Check-DesktopLaunch.ps1 -HostPath ./artifacts/Harbor.NativeHost/Harbor.NativeHost.exe -DataDirectory "C:\Your Folder\NewHostCheck"`. No download submitted; live browser integration remains untested. Close running published app before rebuilding to avoid locked DLLs.
+Real native-host/desktop confirmation regression (fresh directory, opens/cancels own window): `./browser/Check-DesktopLaunch.ps1 -HostPath ./artifacts/Flugel.NativeHost/Flugel.NativeHost.exe -DataDirectory "C:\Your Folder\NewHostCheck"`. No download submitted; live browser integration remains untested. Close running published app before rebuilding to avoid locked DLLs.
 
 Optional browser setup: `browser\README.md`. No registration performed automatically. Bridge supports explicit link submission only; no cookie capture, universal interception or media extraction.
 
@@ -58,7 +58,7 @@ Optional browser setup: `browser\README.md`. No registration performed automatic
 | Architecture | `ARCHITECTURE.md` |
 | Original source | `app/`, `browser/` |
 | Compiled Windows applications/checksums | `artifacts/` |
-| Test results and limitations | `TESTING.md`, `app/Harbor.Checks/RESULTS.md`, `browser/RESULTS.md`, `test-output/ui-final/` |
+| Test results and limitations | `TESTING.md`, `app/Flugel.Checks/RESULTS.md`, `browser/RESULTS.md`, `test-output/ui-final/` |
 | Feature comparison | `COVERAGE.md` |
 | Original editable UI concept (draft) | [Figma concept](https://www.figma.com/design/JRzeiv50SRhbCPIds1Yx6C?node-id=3-57) |
 

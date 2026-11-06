@@ -7,12 +7,12 @@ Windows x64, 2026-11-06; .NET10.0.13, SDK10.0.402, display120DPI. All downloads 
 | Suite | Executed result | Evidence |
 |---|---|---|
 | Release build/publish | Core/Desktop/NativeHost succeed, zero warnings/errors | `build.ps1`; `artifacts/` |
-| Production engine | **40/40 passed** | `app/Harbor.Checks/RESULTS.md`, generated temp artifacts recorded there |
-| Native messaging host | **13/13 self-tests passed** | `browser/RESULTS.md`; `dotnet run --project app/Harbor.NativeHost -c Release -- --self-test` |
-| Browser bridge subprocess/mock | **Passed** actual host invalid-frame process tests and mocked MV3 events/status/errors | `node browser/checks.cjs artifacts/Harbor.NativeHost/Harbor.NativeHost.exe` |
+| Production engine | **40/40 passed** | `app/Flugel.Checks/RESULTS.md`, generated temp artifacts recorded there |
+| Native messaging host | **13/13 self-tests passed** | `browser/RESULTS.md`; `dotnet run --project app/Flugel.NativeHost -c Release -- --self-test` |
+| Browser bridge subprocess/mock | **Passed** actual host invalid-frame process tests and mocked MV3 events/status/errors | `node browser/checks.cjs artifacts/Flugel.NativeHost/Flugel.NativeHost.exe` |
 | Real native-host/desktop handoff | **Passed** final published host replied/exited in128ms while isolated desktop confirmation stayed open; UIA cancelled/closed normally | `browser/Check-DesktopLaunch.ps1`; `browser/RESULTS.md`; no live browser installation |
 | Published native WPF smoke | **16 checks passed, exit0** | `test-output/ui-final/evidence.json` + four PNGs |
-| Windows MCP desktop observation | Actual StreamHarbor native window observed,1513×1000 physical pixels | MCP Snapshot during run; native UIA list `test-output/live-uia.json` |
+| Windows MCP desktop observation | Actual Flugel Download Manager native window observed,1513×1000 physical pixels | MCP Snapshot during run; native UIA list `test-output/live-uia.json` |
 | Original-product control transfer | 16MiB file completed, SHA-256 matches | `analysis/UI-RUNTIME.md`, `analysis/idm-download-result.json` |
 | Native analysis integrity | **Passed** retained cited evidence, unchanged target/toolchain hashes, explicit close receipts | `analysis/ghidra-report.md`; run `node ./verify-analysis.mjs` from `analysis/` |
 | Release separation/original integrity | **Passed** all21 final release files checked, no original inventory file hash in release; all186 original files unchanged | `verify-release.ps1`, `test-output/release-verification.json` |

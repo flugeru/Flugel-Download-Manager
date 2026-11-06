@@ -27,4 +27,4 @@ Existing local Ghidra `C:\Users\Flugel\ghidra\ghidra_12.1_PUBLIC`, application.v
 
 ## Isolation
 
-Project: `C:\Users\Flugel\Projects\StreamHarbor`; original installed directory never edited. Analysis evidence excluded from app builds. Implementation agents receive only `spec/` behavioral contracts. No VM or enforced filesystem separation: see `spec/CLEAN-ROOM.md`. Test servers bind IPv4 loopback; generated artifacts retained locally. Browser registration remains opt-in and was not applied.
+Project: `C:\Users\Flugel\Projects\Flugel Download Manager`; original installed directory never edited. Analysis evidence excluded from app builds. Implementation agents receive only `spec/` behavioral contracts. No VM or enforced filesystem separation: see `spec/CLEAN-ROOM.md`. Test servers bind IPv4 loopback; generated artifacts retained locally. Browser registration remains opt-in and was not applied.
