@@ -38,6 +38,18 @@ Regressão executável: `node browser/check-media-bridge.cjs`. Inclui isolamento
 - SHA-256 da fixture: `469169f01110bb3f23c42932a46f7f6214df68202a256af8019978fc57552436`.
 - No perfil pessoal: extensão **2.2.0**, opção automática marcada e ponte conectada foram observadas. Ao repetir o teste externo, a página principal `https://nuvem.anitsu.moe/` respondeu **502 Bad Gateway — nginx/1.18.0**. Portanto, a interceptação automática no Anitsu ainda não foi comprovada.
 
+### Reteste pelo portal: aprovado, 14:14 UTC
+
+A conclusão de bloqueio acima foi superada pelo teste seguindo o caminho indicado pelo usuário: **`https://anitsu.moe/` → BAIXAR AGORA → Animes → Letra Y → Youjo Senki → [2026] Youjo Senki II → [Anitsu] → download do episódio 08**. O acervo abriu normalmente após o clique no portal; o 502 da navegação direta não demonstrava falha desse fluxo.
+
+- Clique no botão de download do site abriu automaticamente **Add a download** no FDM, sem usar o popup da extensão.
+- **Start now** já selecionado; destino separado para preservar o arquivo anterior.
+- Job `2b241d83b6cc48098ddfc216374ea76b`, concluído em `2026-11-06T14:14:28.0368949+00:00`, sem erro.
+- Arquivo: `C:\Users\Flugel\Downloads\FDM-anitsu-auto-20261106-111413\[Anitsu] Youjo Senki S2 - 08 [WEB DUAL 1080p HEVC].mkv`.
+- **346.372.662 bytes**, assinatura Matroska `1A-45-DF-A3`, SHA-256 `cc93c13f4cc4b1a5589e8855c27b1cc61d12fab691deda7de81aa454fc8a6652`, idêntico ao arquivo obtido anteriormente pelo popup.
+- Histórico recente do Helium inspecionado após o teste: nova cópia do episódio 08 com estado **Cancelado**. A cópia antiga do navegador continua preservada; não foi removido histórico nem arquivo do usuário.
+- Nenhuma credencial registrada na evidência. Reprodução integral continua não verificada.
+
 Teste reproduzível em PowerShell, com host previamente registrado para o ID da extensão:
 
 ```powershell
