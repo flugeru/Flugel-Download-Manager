@@ -186,7 +186,7 @@ public partial class App : Application
                     MediaQualityLabel = req.MediaQuality,
                     MediaSegmentUrls = req.SegmentUrls,
                     CookieHeader = req.CookieHeader,
-                    StartImmediately = false
+                    StartImmediately = true
                 }) == true;
                 if (!accepted) resp.Status = "desktop-busy";
             }

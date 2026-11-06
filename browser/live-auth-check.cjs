@@ -14,10 +14,11 @@ const extension = path.join(root, 'artifacts/browser/extension');
 const output = fs.mkdtempSync(path.join(process.env.LOCALAPPDATA, 'Temp/opencode/auth-live-'));
 const downloads = path.join(output, 'downloads');
 fs.mkdirSync(downloads);
+const intercept = process.env.FDM_INTERCEPT_TEST === '1';
 
 const apiPath = 'Animes/Test Series/Sample Episode - 01 [WEB 1080p].mkv';
 const apiUrlPath = '/api/download?path=' + encodeURIComponent(apiPath);
-const payload = Buffer.alloc(256 * 1024, 0x6b);
+const payload = Buffer.alloc((intercept ? 4096 : 256) * 1024, 0x6b);
 const expectedName = 'Sample Episode - 01 [WEB 1080p].mkv';
 const seen = [];
 
@@ -31,11 +32,24 @@ const server = http.createServer((req, res) => {
       res.writeHead(401, { 'Content-Type': 'application/json' });
       return res.end('{"error":"unauthorized"}');
     }
-    res.writeHead(200, { 'Content-Type': 'video/x-matroska', 'Content-Length': payload.length });
+    res.writeHead(200, { 'Content-Type': 'video/x-matroska', 'Content-Length': payload.length,
+      ...(intercept ? { 'Content-Disposition': 'attachment; filename="' + expectedName + '"' } : {}) });
+    if (intercept && req.method !== 'HEAD') {
+      let offset = 0;
+      const timer = setInterval(() => {
+        const end = Math.min(offset + 32768, payload.length);
+        res.write(payload.subarray(offset, end)); offset = end;
+        if (offset === payload.length) { clearInterval(timer); res.end(); }
+      }, 20);
+      res.on('close', () => clearInterval(timer));
+      return;
+    }
     return res.end(req.method === 'HEAD' ? undefined : payload);
   }
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-  res.end(`<!doctype html><title>Logged-in media check</title><video width="640" height="360" controls src="${apiUrlPath}"></video>`);
+  res.end(`<!doctype html><title>Logged-in media check</title>${intercept
+    ? `<a id="download" href="${apiUrlPath}">Download authenticated file</a>`
+    : `<video width="640" height="360" controls src="${apiUrlPath}"></video>`}`);
 });
 
 let browser, pageSocket, workerSocket;
@@ -105,8 +119,23 @@ function makeCdp(ws) {
   // The user's explicit per-site permission, set through the extension's own storage.
   const negative = process.env.FDM_NO_SITE_PERMISSION === '1';
   if (!negative) await evaluate(workerCdp, `chrome.storage.local.set({ "cookies:127.0.0.1": true })`);
+  if (intercept) await evaluate(workerCdp, 'chrome.storage.local.set({ autoIntercept: true })');
 
   await pageCdp('Page.reload');
+  let label;
+  if (intercept) {
+    await delay(500);
+    await evaluate(pageCdp, 'document.querySelector("#download").click()');
+    let item;
+    for (let i = 0; i < 100; i++) {
+      item = await evaluate(workerCdp, '(async()=> (await chrome.downloads.search({})).find(x=>x.url.includes("/api/download?")))()');
+      if (item?.state === 'interrupted') break;
+      await delay(100);
+    }
+    assert.equal(item?.state, 'interrupted', 'Browser copy was not cancelled after desktop acceptance');
+    assert.equal(item.error, 'USER_CANCELED');
+    label = 'Automatic browser takeover; browser copy cancelled';
+  } else {
   let balloon = false;
   for (let i = 0; i < 120 && !balloon; i++) {
     balloon = await evaluate(pageCdp, '!!document.querySelector("[data-flugel-download-manager=balloon]")');
@@ -123,12 +152,13 @@ function makeCdp(ws) {
   }
   await evaluate(pageCdp, 'document.querySelector("[data-flugel-download-manager=balloon]").shadowRoot.querySelector(".btn").click()');
   await delay(400);
-  const label = await evaluate(pageCdp, 'document.querySelector("[data-flugel-download-manager=balloon]").shadowRoot.querySelector(".item").innerText');
+  label = await evaluate(pageCdp, 'document.querySelector("[data-flugel-download-manager=balloon]").shadowRoot.querySelector(".item").innerText');
   assert.match(label, /Sample Episode - 01/);
   await evaluate(pageCdp, 'document.querySelector("[data-flugel-download-manager=balloon]").shadowRoot.querySelector(".item").click()');
+  }
 
   const ui = spawnSync('powershell.exe', ['-NoProfile', '-File', path.join(__dirname, 'Check-MediaDialog.ps1'),
-    '-Destination', downloads, '-ExpectedUrlPattern', '^http://127\\.0\\.0\\.1:\\d+/api/download\\?path='],
+    '-Destination', downloads, '-ExpectedUrlPattern', '^http://127\\.0\\.0\\.1:\\d+/api/download\\?path=', ...(intercept ? ['-RequireStartNow'] : [])],
     { timeout: 30000, encoding: 'utf8' });
   assert.equal(ui.status, 0, ui.stderr || ui.stdout);
 
@@ -149,7 +179,7 @@ function makeCdp(ws) {
   assert.ok(seen.some(s => s.authorized), 'Server never received the browser session cookie');
 
   const report = {
-    passed: true, capturedAtUtc: new Date().toISOString(), browser: process.argv[2], label,
+    passed: true, capturedAtUtc: new Date().toISOString(), browser: process.argv[2], label, automaticInterception: intercept,
     scope: 'Real unpacked extension, browser session cookie for a local origin with explicit per-site permission, registered native host, WPF confirmation, exact bytes. External site and codec playback not tested.',
     serverRequests: seen, fileName: expectedName, bytes: payload.length, sha256: hash(payload), evidence: output
   };

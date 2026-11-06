@@ -70,7 +70,7 @@ public partial class MainWindow : Window
                     MediaQualityLabel = initialMediaQuality,
                     MediaSegmentUrls = initialSegments,
                     CookieHeader = initialCookie,
-                    StartImmediately = false
+StartImmediately = true
                 });
         };
     }

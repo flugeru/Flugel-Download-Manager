@@ -1,4 +1,4 @@
-﻿param([Parameter(Mandatory=$true)][string]$Destination, [string]$ExpectedUrlPattern = '^http://127\.0\.0\.1:\d+/588340\.mp4$')
+﻿param([Parameter(Mandatory=$true)][string]$Destination, [string]$ExpectedUrlPattern = '^http://127\.0\.0\.1:\d+/588340\.mp4$', [switch]$RequireStartNow)
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName UIAutomationClient,UIAutomationTypes
 $root = [System.Windows.Automation.AutomationElement]::RootElement
@@ -29,6 +29,7 @@ if ($url -notmatch $ExpectedUrlPattern) { throw 'Refusing to confirm anything ex
 $radios = $dialog.FindAll([System.Windows.Automation.TreeScope]::Descendants, (New-Object System.Windows.Automation.PropertyCondition ([System.Windows.Automation.AutomationElement]::ControlTypeProperty), ([System.Windows.Automation.ControlType]::RadioButton)))
 $start = $radios | Where-Object { $_.Current.Name -replace '_','' -eq 'Start now' } | Select-Object -First 1
 if (-not $start) { throw 'Start now radio button missing.' }
+if ($RequireStartNow -and -not $start.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected) { throw 'Browser confirmation did not default to Start now.' }
 $start.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select()
 $c = New-Object System.Windows.Automation.PropertyCondition ([System.Windows.Automation.AutomationElement]::NameProperty), 'Add download'
 $button = $dialog.FindFirst([System.Windows.Automation.TreeScope]::Descendants,$c)

@@ -7,6 +7,10 @@ const vm = require('node:vm');
 const { spawnSync } = require('node:child_process');
 
 const requests = [];
+const downloadCalls = [];
+let pauseFails = false;
+let cancelFails = false;
+let nativeStatus = 'accepted-for-confirmation';
 let listener;
 let nativeError;
 let storedFlags = {};
@@ -19,6 +23,12 @@ const chrome = {
   contextMenus: { onClicked: event },
   tabs: { onRemoved: event, onUpdated: event, async query() { return [activeTab]; } },
   webRequest: { onBeforeRequest: event, onHeadersReceived: event },
+  downloads: {
+    onCreated: event,
+    async pause(id) { downloadCalls.push(['pause', id]); if (pauseFails) throw Error('already complete'); },
+    async cancel(id) { downloadCalls.push(['cancel', id]); if (cancelFails) throw Error('cannot cancel'); },
+    async resume(id) { downloadCalls.push(['resume', id]); }
+  },
   storage: {
     local: { async get(keys) { const out = {}; for (const k of keys) if (k in storedFlags) out[k] = storedFlags[k]; return out; } },
     session: { async get(key) { return { [key]: session[key] }; }, async set(values) { Object.assign(session, values); }, async remove(key) { delete session[key]; } }
@@ -31,7 +41,7 @@ const chrome = {
       assert.equal(host, 'com.flugel.downloadmanager');
       requests.push(request);
       chrome.runtime.lastError = nativeError ? { message: nativeError } : undefined;
-      callback({ version: 1, status: 'accepted-for-confirmation' });
+      callback({ version: 1, status: nativeStatus });
       chrome.runtime.lastError = undefined;
     }
   }
@@ -97,6 +107,50 @@ const nuvem = 'https://nuvem.anitsu.moe/api/download?path=Animes%2FLetra%20Y%2FY
   assert.equal((await send({ url: 'https://example.test/video.mp4' })).error, 'host-forbidden');
   assert.equal((await send({ url: 'file:///C:/secret' })).error, 'invalid-url');
 
+  // Automatic takeover cancels only after acceptance and restores on host failure.
+  const item = { id: 99, url: nuvem, referrer: activeTab.url, state: 'in_progress', filename: 'C:\\Downloads\\episode.mkv' };
+  nativeError = undefined;
+  storedFlags = { autoIntercept: true, 'cookies:anitsu.moe': true };
+  requests.length = 0;
+  downloadCalls.length = 0;
+  await context.interceptDownload(item);
+  assert.deepEqual(downloadCalls, [['pause', 99], ['cancel', 99]]);
+  assert.equal(requests.find(r => r.action).url, nuvem);
+  assert.equal(requests.find(r => r.action).cookie, 'session=abc; lang=pt');
+  nativeError = 'Specified native messaging host not found.';
+  downloadCalls.length = 0;
+  await context.interceptDownload(item);
+  assert.deepEqual(downloadCalls, [['pause', 99], ['resume', 99]]);
+  nativeError = undefined;
+  nativeStatus = 'desktop-busy';
+  downloadCalls.length = 0;
+  await context.interceptDownload(item);
+  assert.deepEqual(downloadCalls, [['pause', 99], ['resume', 99]]);
+  nativeStatus = 'accepted-for-confirmation';
+  cancelFails = true;
+  downloadCalls.length = 0;
+  await context.interceptDownload(item);
+  assert.deepEqual(downloadCalls, [['pause', 99], ['cancel', 99], ['resume', 99]]);
+  cancelFails = false;
+  pauseFails = true;
+  requests.length = 0;
+  downloadCalls.length = 0;
+  await context.interceptDownload(item);
+  assert.deepEqual(downloadCalls, [['pause', 99]]);
+  assert.equal(requests.length, 0);
+  pauseFails = false;
+  for (const flags of [{}, { autoIntercept: false }, { autoIntercept: true, globalEnabled: false }, { autoIntercept: true, 'site:nuvem.anitsu.moe': false }]) {
+    storedFlags = flags;
+    downloadCalls.length = 0;
+    await context.interceptDownload(item);
+    assert.equal(downloadCalls.length, 0);
+  }
+  storedFlags = { autoIntercept: true };
+  for (const extra of [{ url: 'blob:https://example.test/x' }, { byExtensionId: 'other' }, { incognito: true }, { state: 'complete' }]) {
+    await context.interceptDownload({ ...item, ...extra });
+    assert.equal(downloadCalls.length, 0);
+  }
+
   if (process.argv[2]) {
     for (const request of requests.filter(r => r.action).slice(0, 2)) {
       const body = Buffer.from(JSON.stringify(request));
@@ -108,5 +162,5 @@ const nuvem = 'https://nuvem.anitsu.moe/api/download?path=Animes%2FLetra%20Y%2FY
       assert.notEqual(reply.error, 'invalid-request');
     }
   }
-  console.log('PASS media naming (path parameter), cookie permission per site, strict link schema, native error propagation, unsafe URL rejection');
+  console.log('PASS media naming, per-site cookies, popup submission, MV3 suspension, strict schema, automatic takeover and browser fallback');
 })().catch(error => { console.error(error); process.exitCode = 1; });

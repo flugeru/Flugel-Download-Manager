@@ -213,6 +213,35 @@ function typedName(url, type) {
 chrome.tabs.onRemoved.addListener(clearTabMedia);
 chrome.tabs.onUpdated.addListener((tabId, info) => { if (info.status === "loading") clearTabMedia(tabId); });
 
+// Pause first, cancel only after desktop acceptance; otherwise restore the browser.
+async function interceptDownload(item) {
+if (item.state !== "in_progress" || item.paused || item.byExtensionId || item.incognito) return;
+const url = cleanUrl(item.url);
+if (!url) return; // blob/data downloads cannot be fetched independently by the desktop.
+const pageUrl = cleanUrl(item.referrer) || url;
+let paused = false;
+try {
+const flags = await chrome.storage.local.get(["globalEnabled", "autoIntercept", "site:" + hostOf(pageUrl)]);
+if (flags.globalEnabled === false || flags.autoIntercept !== true || flags["site:" + hostOf(pageUrl)] === false) return;
+await chrome.downloads.pause(item.id);
+paused = true;
+const fileName = mediaNameFromUrl(url) || item.filename?.split(/[\\/]/).pop();
+const result = await enqueueLink(url, { fileName, referrer: cleanUrl(item.referrer) || undefined });
+if (result.ok) {
+await chrome.downloads.cancel(item.id);
+paused = false;
+}
+} catch {
+badge(false, "Flugel Download Manager: interception failed; restoring browser download");
+} finally {
+if (paused) {
+try { await chrome.downloads.resume(item.id); }
+catch { badge(false, "Flugel Download Manager: resume the download from the browser download list"); }
+}
+}
+}
+chrome.downloads.onCreated.addListener(item => { void interceptDownload(item); });
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
     if (msg?.type === "enqueue-media") {
