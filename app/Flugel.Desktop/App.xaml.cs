@@ -93,6 +93,13 @@ public partial class App : Application
                 }
             }
 
+            // Single instance: hand the request to the running app and exit quietly instead of failing on locked data.
+            if (!smoke && TryForwardToRunningInstance(dataDirectory, url, fileName, referrer, mediaQuality, segmentUrls, cookieHeader))
+            {
+                Shutdown(0);
+                return;
+            }
+
             var manager = new DownloadManager(dataDirectory);
             var window = new MainWindow(manager, dataDirectory, url, fileName, referrer, mediaQuality, segmentUrls, smoke, cookieHeader);
             MainWin = window;
@@ -126,6 +133,21 @@ public partial class App : Application
         }
     }
 
+    private static bool TryForwardToRunningInstance(string dataDirectory, string? url, string? fileName, string? referrer,
+        string? mediaQuality, List<string>? segmentUrls, string? cookieHeader)
+    {
+        var request = url is null
+            ? new IpcRequestMessage { Action = "activate" }
+            : new IpcRequestMessage
+            {
+                Action = "enqueue-media", Url = url, FileName = fileName, Referrer = referrer,
+                MediaQuality = mediaQuality, SegmentUrls = segmentUrls, CookieHeader = cookieHeader
+            };
+        // Any reply, including "desktop-busy", means a running instance owns the request; do not start a second app.
+        var reply = SingleInstanceIpc.TrySendAsync(dataDirectory, request, 1500).GetAwaiter().GetResult();
+        return reply is not null;
+    }
+
     private Task<IpcResponseMessage> HandleIpcRequestAsync(IpcRequestMessage req)
     {
         return Dispatcher.InvokeAsync(() =>
@@ -140,6 +162,11 @@ public partial class App : Application
                 AutoCaptureExtensions = settings?.AutoCaptureExtensions ?? "",
                 ExcludedHosts = settings?.ExcludedHosts ?? ""
             };
+            if (req.Action == "activate")
+            {
+                ShowAndActivate();
+                return resp;
+            }
             if (req.Action == "enqueue" || req.Action == "enqueue-media")
             {
                 try
