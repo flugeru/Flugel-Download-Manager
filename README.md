@@ -19,7 +19,7 @@ Default state: `%LOCALAPPDATA%\Flugel Download Manager`. Isolated profile:
 .\artifacts\Flugel.Desktop\FlugelDownloadManager.exe --data-dir "C:\Your Folder\Flugel Download ManagerData"
 ```
 
-One process per data directory. No existing-instance browser IPC forwarding yet. `--url "https://example.org/file.zip"` prefills Add confirmation; never silently downloads. Existing destination files are never overwritten; choose another filename. Keep enough free space for partials plus assembled result. URL query parameters persist in profile state and can appear in process arguments; avoid secret-bearing links if same-user exposure unacceptable. Downloaded files never execute automatically.
+One process owns a data directory. When an instance is already running, the native host can forward browser handoff requests to it via same-user named-pipe IPC; a second `--url` launch/pending request is handed to the running app instead of failing on the data lock. `--url "https://example.org/file.zip"` and browser handoffs prefill **Add** confirmation; nothing is silently downloaded. Existing destination files are never overwritten without an explicit, safe choice. Keep enough free space for partials plus assembled result. URL query parameters persist in profile state and can appear in process arguments; avoid secret-bearing links if same-user exposure is unacceptable. Downloaded files never execute automatically.
 
 Keyboard: Ctrl+N Add, Ctrl+R Resume, Ctrl+P Pause, Alt+Up/Down queue move, Ctrl+, Settings; native access keys and Tab focus. Delete acts on focused table after confirmation.
 
@@ -45,7 +45,7 @@ Creates loopback fixture, exercises native windows and production engine, record
 
 Real native-host/desktop confirmation regression (fresh directory, opens/cancels own window): `./browser/Check-DesktopLaunch.ps1 -HostPath ./artifacts/Flugel.NativeHost/Flugel.NativeHost.exe -DataDirectory "C:\Your Folder\NewHostCheck"`. No download submitted; live browser integration remains untested. Close running published app before rebuilding to avoid locked DLLs.
 
-Optional browser setup: `browser\README.md`. No registration performed automatically. Bridge supports explicit link submission only; no cookie capture, universal interception or media extraction.
+Optional browser setup: `browser\README.md`. No registration performed automatically. The bridge supports explicit user-confirmed link/media submission and conditional automatic interception for eligible observed GET downloads (with safe fallbacks). Per-site session cookies are opt-in, used only for the user-started transfer, never persisted/logged. POST/body replay, DRM bypass, and universal `blob:`/MediaSource capture are **not** supported. Automatic interception uses a durable-acceptance protocol (cancel browser copy only after a persisted desktop job is confirmed); real-browser dialog E2E should be reverified after extension reloads — see `browser/REAL-SITE-CHECK.md` and `C:\Users\Flugel\Desktop\FDM-handoff.md` for current verified evidence and limits.
 
 ## Deliverables
 

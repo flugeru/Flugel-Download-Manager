@@ -1,5 +1,12 @@
 # Browser bridge implementation results
 
+## Current status (2026-11-06, after durable-acceptance P0 / b3fc9ba)
+- **Verified this round:** `node browser/check-media-bridge.cjs` PASS (media naming, per-site cookies, popup submission, MV3 suspension, strict schema, **durable-acceptance handoff**, browser fallback). `node browser/check-media-bridge.cjs app/Flugel.NativeHost/bin/Release/net10.0/Flugel.NativeHost.exe` PASS including real `job-status` frame acceptance. `Flugel.NativeHost --self-test` **19/19 PASS**. `browser/checks.cjs` delegates to the maintained harness. Extension **2.2.3** reloaded in the personal Helium profile (verified 2.2.3 on the extension card).
+- **Protocol:** extension pauses the browser copy, sends `requestId`, and cancels only after durable `confirmed` (persisted job). `waiting-user-confirmation`/`launching` poll `job-status`; `rejected`/`unknown-request`/busy/host-unavailable/timeout restore the browser copy. Host relays statuses; desktop persists `RequestId` and answers `job-status`.
+- **Not re-proven live this round:** real browser + desktop dialog close→restore and confirm→persisted-cancel/restart recovery E2E. See `browser/REAL-SITE-CHECK.md` and `C:\Users\Flugel\Desktop\FDM-handoff.md`.
+
+Historical sections below may describe earlier `accepted-for-confirmation`/13-group behavior; current source and `app/Flugel.NativeHost/SelfTests.cs`/`browser/check-media-bridge.cjs` are authoritative.
+
 Date: 2026-11-06. Windows x64. .NET SDK `10.0.402`; Node `v26.12.0`. No external package references.
 
 ## Follow-up: real desktop pipe-lifetime regression
