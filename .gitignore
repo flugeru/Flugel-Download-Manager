@@ -1,5 +1,6 @@
 **/bin/
 **/obj/
+**/publish/
 artifacts/
 analysis/extracted/
 analysis/integration-packages/
@@ -13,3 +14,16 @@ analysis/*.xpi
 analysis/*.crx
 test-output/
 *.user
+
+# Keep target-derived raw evidence local; commit authored reports/scripts only.
+analysis/*
+!analysis/*.md
+!analysis/*.ps1
+!analysis/*.cjs
+!analysis/*.mjs
+!analysis/inventory-files.json
+!analysis/inventory-windows.json
+!analysis/mcp-catalog-summary.json
+!analysis/artifact-identities.json
+!analysis/toolchain-file-identities.json
+!analysis/toolchain-provenance.json

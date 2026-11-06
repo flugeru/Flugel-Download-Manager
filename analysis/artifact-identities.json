@@ -1,0 +1,18 @@
+[
+    {
+        "path":  "C:\\Program Files (x86)\\Internet Download Manager\\IDMMsgHost.exe",
+        "size":  39168,
+        "sha256":  "DBA25A49ADB88F675DB26D2DC7A0FA9D4A5DB2326858CB9D2515F6F34B8E0B65",
+        "version":  "6,38,20,9",
+        "signature_status":  "Valid",
+        "signer":  "CN=Tonec Inc., O=Tonec Inc., L=New York, S=New York, C=US"
+    },
+    {
+        "path":  "C:\\Program Files (x86)\\Internet Download Manager\\IDMan.exe",
+        "size":  6517616,
+        "sha256":  "A705C0154FAFC7CD509DECF165CB6F6C050B6521B40ADB6F730DD827C86051C7",
+        "version":  "6, 43, 18, 2",
+        "signature_status":  "Valid",
+        "signer":  "CN=Tonec Inc., OU=Internet Download Manager, O=Tonec Inc., L=New York, S=New York, C=US"
+    }
+]

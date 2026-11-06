@@ -1,0 +1,27 @@
+[
+    {
+        "path":  "C:\\Users\\Flugel\\ghidra\\ghidra_12.1_PUBLIC\\Ghidra\\application.properties",
+        "bytes":  657,
+        "sha256":  "b452af52da50b61a26e175d3046d3996b8b14f8c0c9dce26139ce11eec75e65d"
+    },
+    {
+        "path":  "C:\\Users\\Flugel\\ghidra\\ghidra_12.1_PUBLIC\\support\\analyzeHeadless.bat",
+        "bytes":  2930,
+        "sha256":  "dd7b9d17d32ed70a71df82a43a21cdaed6c4ce67064e30f8642c149f81c2ae07"
+    },
+    {
+        "path":  "C:\\Users\\Flugel\\ghidra\\ghidra_12.1_PUBLIC\\Ghidra\\Features\\Decompiler\\os\\win_x86_64\\decompile.exe",
+        "bytes":  2553856,
+        "sha256":  "d9c33a1a248698da7ad6ee952d5dded65ec6cfad867f904dccb9b40ebf912517"
+    },
+    {
+        "path":  "C:\\Users\\Flugel\\jdk21\\jdk-21.0.12.1+1\\bin\\java.exe",
+        "bytes":  50304,
+        "sha256":  "82051fdab26319d77d20cc0065045d05ec00b3e3d05f44935d7c06b96b621d55"
+    },
+    {
+        "path":  "C:\\Users\\Flugel\\jdk21\\jdk-21.0.12.1+1\\release",
+        "bytes":  1664,
+        "sha256":  "07117c72ce033949c14878e07fbf2fe23f59a1f8c90a6d1351b5c89099847ce7"
+    }
+]

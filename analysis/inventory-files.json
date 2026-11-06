@@ -1,0 +1,1315 @@
+{
+  "createdUtc": "2026-11-06T06:48:12.076Z",
+  "scope": [
+    "C:\\Program Files (x86)\\Internet Download Manager",
+    "C:\\Users\\Flugel\\Downloads\\idman643build18.exe"
+  ],
+  "hashAlgorithm": "SHA-256",
+  "fileCount": 186,
+  "totalBytes": 37406902,
+  "files": [
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Brotli-license.txt",
+      "relativePath": "Brotli-license.txt",
+      "size": 1084,
+      "sha256": "3d180008e36922a4e8daec11c34c7af264fed5962d07924aea928c38e8663c94",
+      "modifiedUtc": "2022-01-30T14:24:34.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMEdgeExt.crx",
+      "relativePath": "IDMEdgeExt.crx",
+      "size": 103640,
+      "sha256": "026793fa036df135eee5e89a3d301b8ab7022d191f3a1615cda672dfb3f886e6",
+      "modifiedUtc": "2026-06-15T01:25:26.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMFType.dat",
+      "relativePath": "IDMFType.dat",
+      "size": 185031,
+      "sha256": "a21f4d385269a38e5e63f5245d00f6de864d56392ab40f139dec0fc9039a8f04",
+      "modifiedUtc": "2017-04-24T05:29:56.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMFType64.dll",
+      "relativePath": "IDMFType64.dll",
+      "size": 52240,
+      "sha256": "0479dda9f82192a7c8881413f8ca6a220e63a4811efadc497dbefc0f4c290441",
+      "modifiedUtc": "2013-03-20T09:43:34.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMGCExt.crx",
+      "relativePath": "IDMGCExt.crx",
+      "size": 107834,
+      "sha256": "1d2297ccbdbbf06e9e2546bb9f9b9985433eb7c02d75f09bbcbc9784ece583f7",
+      "modifiedUtc": "2026-06-15T01:25:26.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMGetAll.dll",
+      "relativePath": "IDMGetAll.dll",
+      "size": 75576,
+      "sha256": "33a8a6b9413d60a38237bafc4c331dfebf0bf64f8057abc335b4a6a6b95c9381",
+      "modifiedUtc": "2019-11-08T17:24:40.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMGetAll64.dll",
+      "relativePath": "IDMGetAll64.dll",
+      "size": 95800,
+      "sha256": "117abaeb27451944c72ffee804e674046c58d769bd2e940c71e66edec0725bd1",
+      "modifiedUtc": "2019-05-27T01:27:02.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMGrHlp.exe",
+      "relativePath": "IDMGrHlp.exe",
+      "size": 519992,
+      "sha256": "b3b6281ea820eae8192e50b30698cf4c3b8bc3d4376c978403bc9e18e5857c23",
+      "modifiedUtc": "2019-11-08T17:34:06.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMIECC.dll",
+      "relativePath": "IDMIECC.dll",
+      "size": 475048,
+      "sha256": "9a9989644213043f2cfff177b907ef2bdd496c2f65803d8f158eae9034918878",
+      "modifiedUtc": "2021-11-07T23:21:46.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMIECC64.dll",
+      "relativePath": "IDMIECC64.dll",
+      "size": 672680,
+      "sha256": "d0c6d455d067e8717efe2cfb9bdcbeae27b48830fe77e9d45c351fbfb164716d",
+      "modifiedUtc": "2021-11-07T23:21:48.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMIntegrator64.exe",
+      "relativePath": "IDMIntegrator64.exe",
+      "size": 27864,
+      "sha256": "caffd6fedeb8c5720725171f2f72b977dd22e98db1ceb053ba14c130323e4465",
+      "modifiedUtc": "2023-11-20T08:42:02.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMMsgHost.exe",
+      "relativePath": "IDMMsgHost.exe",
+      "size": 39168,
+      "sha256": "dba25a49adb88f675db26d2dc7a0fa9d4a5db2326858cb9d2515f6f34b8e0b65",
+      "modifiedUtc": "2021-04-16T06:35:50.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMMsgHost.json",
+      "relativePath": "IDMMsgHost.json",
+      "size": 351,
+      "sha256": "f3af82662cd90b90ce0680bbb1fb8a4b998d63d0baf9bba8170723f53de1650c",
+      "modifiedUtc": "2020-07-31T07:01:34.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMMsgHostMoz.json",
+      "relativePath": "IDMMsgHostMoz.json",
+      "size": 282,
+      "sha256": "67d8c83b0f7dc40c8987cacaee984fa4646f6d72b9daaae0fe6885687c5e08e1",
+      "modifiedUtc": "2018-10-16T18:13:34.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMNetMon.dll",
+      "relativePath": "IDMNetMon.dll",
+      "size": 505712,
+      "sha256": "332563ec071c92e36c1d14c3d1e33e0adbc1ea0499ca274353d99f8de2d073f5",
+      "modifiedUtc": "2026-11-04T20:28:46.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMNetMon64.dll",
+      "relativePath": "IDMNetMon64.dll",
+      "size": 586608,
+      "sha256": "df20965165d895908b998243229907c46f5b7dd4106a179dfb4516eee28d0757",
+      "modifiedUtc": "2026-11-04T20:28:48.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMSetup2.log",
+      "relativePath": "IDMSetup2.log",
+      "size": 29944,
+      "sha256": "0e713b49404832631922695809c5da35d02ca1b4baf57e15dcadc0a23b7ac3a0",
+      "modifiedUtc": "2026-11-06T06:31:31.321Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMShellExt.dll",
+      "relativePath": "IDMShellExt.dll",
+      "size": 34496,
+      "sha256": "211930e13a1270450388be5ca4e8a049f71710c53bc3983772e3613224190812",
+      "modifiedUtc": "2021-03-02T03:30:26.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMShellExt64.dll",
+      "relativePath": "IDMShellExt64.dll",
+      "size": 37632,
+      "sha256": "48e5c5916f100880e68c9e667c4457eb0065c5c7ab40fb6d85028fd23d3e4838",
+      "modifiedUtc": "2021-03-02T03:30:26.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMVMPrs.dll",
+      "relativePath": "IDMVMPrs.dll",
+      "size": 337216,
+      "sha256": "f9fe31b640b7d799102b5046b71475a9b574c5c90d5cec4153b48d19d4d8bdef",
+      "modifiedUtc": "2024-09-03T07:52:30.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMVMPrs64.dll",
+      "relativePath": "IDMVMPrs64.dll",
+      "size": 410568,
+      "sha256": "6ff10a3025e0e74bbe9fd99ea21bdaa20a32c94e13145b8805acc82cf1229f5f",
+      "modifiedUtc": "2024-09-03T07:52:30.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IDMan.exe",
+      "relativePath": "IDMan.exe",
+      "size": 6517616,
+      "sha256": "a705c0154fafc7cd509decf165cb6f6c050b6521b40adb6f730dd827c86051c7",
+      "modifiedUtc": "2026-11-04T20:28:26.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IEExt.htm",
+      "relativePath": "IEExt.htm",
+      "size": 277,
+      "sha256": "a17fe100c65749018ca05a1b2e600060d83b4490bddfd3f61b5523c78b9483d7",
+      "modifiedUtc": "2004-12-01T04:31:10.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IEGetAll.htm",
+      "relativePath": "IEGetAll.htm",
+      "size": 283,
+      "sha256": "47937f8f34ba56718d4bd3b97bfd9e42468d6b7615c745b7841272a2e3d39e57",
+      "modifiedUtc": "2003-10-18T22:13:14.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IEGetVL.htm",
+      "relativePath": "IEGetVL.htm",
+      "size": 278,
+      "sha256": "268dfe3cc9163c05771be52e95c67054b33fdc4cb84cf7a37ce7455d994cceac",
+      "modifiedUtc": "2007-06-30T18:19:12.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IEGetVL2.htm",
+      "relativePath": "IEGetVL2.htm",
+      "size": 279,
+      "sha256": "8dd893bd19e93273c20abef2ccfa692352cb83faeafb934077b830cb2f6e4ec1",
+      "modifiedUtc": "2007-09-27T02:06:24.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\IEMonitor.exe",
+      "relativePath": "IEMonitor.exe",
+      "size": 384312,
+      "sha256": "c8fd8860e9a05cc61684ca7a4fea22eda721e701ee717dc039f52312d8d21be6",
+      "modifiedUtc": "2020-03-12T11:24:04.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_ar.lng",
+      "relativePath": "Languages\\idm_ar.lng",
+      "size": 100837,
+      "sha256": "d8b10b6ecc936ad6f019b07ff8de5e96301a2c49b7ded69752d091868cd61cdd",
+      "modifiedUtc": "2026-08-22T19:03:08.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_ba.lng",
+      "relativePath": "Languages\\idm_ba.lng",
+      "size": 61294,
+      "sha256": "6d34028032eb6611231dca18061488ded276de76cd63666fbe044b312d376603",
+      "modifiedUtc": "2022-01-23T23:29:46.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_be.lng",
+      "relativePath": "Languages\\idm_be.lng",
+      "size": 119132,
+      "sha256": "34f313d060cb99945e9ee78542ac4fd5e3eee966a4e3a0d8290f1bf8cfcfd23a",
+      "modifiedUtc": "2022-07-04T16:29:12.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_bg.lng",
+      "relativePath": "Languages\\idm_bg.lng",
+      "size": 90118,
+      "sha256": "986641895958578451a225562b20efd8fde001440e1063063d05c24a5f7b83b3",
+      "modifiedUtc": "2022-01-16T05:57:04.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_chn2.lng",
+      "relativePath": "Languages\\idm_chn2.lng",
+      "size": 106881,
+      "sha256": "6048b086fbaa559cbff6725c1aa624d47b8454e8f1ba37a7affff536aa372211",
+      "modifiedUtc": "2026-02-03T09:15:44.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_cht.lng",
+      "relativePath": "Languages\\idm_cht.lng",
+      "size": 78967,
+      "sha256": "cc4d2f3698d5b48f3bcecf3a69019a1f26a0f59355a438bd12081398477f1c28",
+      "modifiedUtc": "2021-10-17T00:04:16.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_cz.lng",
+      "relativePath": "Languages\\idm_cz.lng",
+      "size": 99115,
+      "sha256": "449f23660278b268ce198c7ca7c1988e5aac4aa18928c45282f4f75a89904b66",
+      "modifiedUtc": "2016-08-14T04:14:46.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_de.lng",
+      "relativePath": "Languages\\idm_de.lng",
+      "size": 121246,
+      "sha256": "01b3a8692e1d5649423d5d60c1f73739e6f6ad73fabe03abe14fe6b5d88a9102",
+      "modifiedUtc": "2026-10-26T14:01:10.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_dk.lng",
+      "relativePath": "Languages\\idm_dk.lng",
+      "size": 91681,
+      "sha256": "ee7c0d5597d536e68c0916a6923a8e9fcdeaac9c0953814bfe30b8daf92fdcbf",
+      "modifiedUtc": "2022-01-16T05:49:40.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_es.lng",
+      "relativePath": "Languages\\idm_es.lng",
+      "size": 125132,
+      "sha256": "f70d8386e91e2dcc86c31a65da9ad5bbac74e3a0585a00fcefe367c3e0e90c0e",
+      "modifiedUtc": "2024-07-17T07:33:58.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_et.lng",
+      "relativePath": "Languages\\idm_et.lng",
+      "size": 116128,
+      "sha256": "a529bc69da471a5bea6b21442997a2faabd75756b5ca7bd099075b3ed2fb6c12",
+      "modifiedUtc": "2025-12-01T07:10:56.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_fa.lng",
+      "relativePath": "Languages\\idm_fa.lng",
+      "size": 114423,
+      "sha256": "92f60cda7a7395d5d4cace82c7270afac5d1b68a2b7714bb1510058fac23879f",
+      "modifiedUtc": "2024-03-18T22:11:08.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_fi.lng",
+      "relativePath": "Languages\\idm_fi.lng",
+      "size": 89193,
+      "sha256": "1d70a8b610f092cf30e45c5ba579350535491f5c102df5684de10ba03c4c9684",
+      "modifiedUtc": "2025-12-01T00:23:42.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_fr.lng",
+      "relativePath": "Languages\\idm_fr.lng",
+      "size": 134609,
+      "sha256": "56358f089d82d85b3815961a9422660cd6ea367a1ed7ff5cd9d4ed8e018fc3cf",
+      "modifiedUtc": "2024-12-05T01:07:34.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_ge.lng",
+      "relativePath": "Languages\\idm_ge.lng",
+      "size": 261543,
+      "sha256": "e84e133ad8b0fc2585c044913e8ad4cb17d7ceed622de4a56bd92376d5a350cb",
+      "modifiedUtc": "2018-08-12T04:18:48.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_gr.lng",
+      "relativePath": "Languages\\idm_gr.lng",
+      "size": 110481,
+      "sha256": "db65ef51d8abda581c13994d13186e1efb3c16879e6475720c841d72d41ebe15",
+      "modifiedUtc": "2015-01-27T06:47:00.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_hi.lng",
+      "relativePath": "Languages\\idm_hi.lng",
+      "size": 216835,
+      "sha256": "48d20f3a5ab095ff6b378c8850ff1eeafe030a1c0b5a0c343e625bfeb8ab7ba0",
+      "modifiedUtc": "2018-12-09T08:33:46.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_hu.lng",
+      "relativePath": "Languages\\idm_hu.lng",
+      "size": 101276,
+      "sha256": "35469c7f7d4c6e877a0101091f39ab4dd5abe81b2f6ba200d2c12c3f51614ac3",
+      "modifiedUtc": "2017-04-09T04:59:36.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_id.lng",
+      "relativePath": "Languages\\idm_id.lng",
+      "size": 119461,
+      "sha256": "225fdf1269be2b83549c9da018c1b340b4b4973b6dfcd576ed15424762e0b816",
+      "modifiedUtc": "2022-06-21T07:42:10.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_it.lng",
+      "relativePath": "Languages\\idm_it.lng",
+      "size": 129445,
+      "sha256": "e29d86b915569486e9c6601994efb53b623be41fc79be6def4f2ce4f528f204c",
+      "modifiedUtc": "2023-03-26T12:55:20.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_iw.lng",
+      "relativePath": "Languages\\idm_iw.lng",
+      "size": 90462,
+      "sha256": "e549814b7eff8d22a2ab0df9fc4113b7a1e3e72316531eff7ec01db52af61468",
+      "modifiedUtc": "2023-07-31T23:10:46.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_jp.lng",
+      "relativePath": "Languages\\idm_jp.lng",
+      "size": 153349,
+      "sha256": "4eef1fc6605ccc0b825f875835cdac67748f735150f35fc01fab35f2a9429f8a",
+      "modifiedUtc": "2023-05-07T12:24:20.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_kr.lng",
+      "relativePath": "Languages\\idm_kr.lng",
+      "size": 103628,
+      "sha256": "7ef5b0d823f6b9fd19c7590defdd87b4cda46482fe57a308b6cd55f3e5a5f89c",
+      "modifiedUtc": "2026-01-28T14:22:24.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_mn.lng",
+      "relativePath": "Languages\\idm_mn.lng",
+      "size": 171033,
+      "sha256": "e3cbb6136377e92d5668d5ce0ae15628f14641bf1e00111a2ea85fa884eed4ab",
+      "modifiedUtc": "2025-06-11T19:49:38.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_my.lng",
+      "relativePath": "Languages\\idm_my.lng",
+      "size": 118651,
+      "sha256": "1c0611bd21a7b9983edff8289862098519f8119201ffb8559e3af5ff1505f178",
+      "modifiedUtc": "2020-08-01T16:38:16.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_nl.lng",
+      "relativePath": "Languages\\idm_nl.lng",
+      "size": 118970,
+      "sha256": "fbee9ee9fe61bf239b97f5d1226993efecc005893e78a8b200f09185eacdd944",
+      "modifiedUtc": "2022-07-04T15:50:22.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_no.lng",
+      "relativePath": "Languages\\idm_no.lng",
+      "size": 48421,
+      "sha256": "024c9127b8efde800a7a611e2d2db65f8223b2d8006d86d6e9ed761da242697c",
+      "modifiedUtc": "2022-01-16T05:56:24.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_pl.lng",
+      "relativePath": "Languages\\idm_pl.lng",
+      "size": 125198,
+      "sha256": "0d013696e4a06f64d92dadee9ea09daf52e03bbf2a7ffd9c85a5de00a3d10a1a",
+      "modifiedUtc": "2026-02-04T20:40:56.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_pt.lng",
+      "relativePath": "Languages\\idm_pt.lng",
+      "size": 122639,
+      "sha256": "57fd1179ebb1018b6a615a2e8ba496d9958251e2830cf27ad49afb50feb96090",
+      "modifiedUtc": "2025-07-15T20:01:18.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_ptbr.lng",
+      "relativePath": "Languages\\idm_ptbr.lng",
+      "size": 121809,
+      "sha256": "0d78dca4c25b0376df7c6a699d1f7e93f652664c2a38afd4f590d2dd555567ca",
+      "modifiedUtc": "2026-08-22T18:29:50.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_ro.lng",
+      "relativePath": "Languages\\idm_ro.lng",
+      "size": 80364,
+      "sha256": "d66c53b30b7e7e92131e0103ff508cf7eafe71fd923177a1ab1cafd32573d2c2",
+      "modifiedUtc": "2022-01-16T05:56:50.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_ru.lng",
+      "relativePath": "Languages\\idm_ru.lng",
+      "size": 111105,
+      "sha256": "0ca2e116dbc3e6d3fe1b519b4a93d368a0539b636c7c9db2e6395b991c5316b6",
+      "modifiedUtc": "2026-08-22T19:12:20.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_sk.lng",
+      "relativePath": "Languages\\idm_sk.lng",
+      "size": 122716,
+      "sha256": "13e9d2fd9d71535c384c92207dbda4d534996c076582d8fbb93a0a4ebbb2b78c",
+      "modifiedUtc": "2025-11-20T23:51:40.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_sr.lng",
+      "relativePath": "Languages\\idm_sr.lng",
+      "size": 118410,
+      "sha256": "0bfab7ec3bfa6020e23768b826b9c59694967d7647011613bdbf6164347856f7",
+      "modifiedUtc": "2022-01-26T22:16:58.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_sw.lng",
+      "relativePath": "Languages\\idm_sw.lng",
+      "size": 80320,
+      "sha256": "f7886c0f5fe232a1daefcbcb453a2c2842e05e8940e23d568111d63cb03228e8",
+      "modifiedUtc": "2022-01-16T05:56:50.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_th.lng",
+      "relativePath": "Languages\\idm_th.lng",
+      "size": 108745,
+      "sha256": "23abd36fc1219434e5a93db822d0680e5ea190a9320db90c85cf0ca08e8775e5",
+      "modifiedUtc": "2025-06-11T16:55:42.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_tr.lng",
+      "relativePath": "Languages\\idm_tr.lng",
+      "size": 120195,
+      "sha256": "0256234ba951de7e10e14d6fe51510808afc7dacb1d7665de1b7e7e6274848c0",
+      "modifiedUtc": "2026-08-22T18:30:04.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\idm_vn.lng",
+      "relativePath": "Languages\\idm_vn.lng",
+      "size": 109901,
+      "sha256": "1425f4ee30f57ed854248fba10621f4aef9b40cf109a31f46bf635e252010113",
+      "modifiedUtc": "2016-07-17T23:40:36.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_al.lng",
+      "relativePath": "Languages\\inst_al.lng",
+      "size": 7335,
+      "sha256": "14d51e3b9f5e68e97ed01a6bb1c598e3e09f9e330a90dbe363d6659ac725f679",
+      "modifiedUtc": "2015-02-12T06:42:34.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_am.lng",
+      "relativePath": "Languages\\inst_am.lng",
+      "size": 11815,
+      "sha256": "7cbcd19ec17184459c2cacf7b5faa70b22625072f753e0061e9dfc358971d0cf",
+      "modifiedUtc": "2018-11-15T09:53:52.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_ar.lng",
+      "relativePath": "Languages\\inst_ar.lng",
+      "size": 6671,
+      "sha256": "cd06da4d52085e74d047cb8e3503e55ce434f5791be4985bf53d4ee41b871efe",
+      "modifiedUtc": "2024-12-14T04:30:12.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_az.lng",
+      "relativePath": "Languages\\inst_az.lng",
+      "size": 6531,
+      "sha256": "778fd1e2b98e84850011dc1ba5045b5da29ed7865885e5c1e77c1d073d21d759",
+      "modifiedUtc": "2020-07-29T21:47:28.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_be.lng",
+      "relativePath": "Languages\\inst_be.lng",
+      "size": 6368,
+      "sha256": "ca9e5d2ae1556571dda5a4f931eeb153605b552d5d1465175de21d5d74133c47",
+      "modifiedUtc": "2022-06-16T06:51:38.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_bg.lng",
+      "relativePath": "Languages\\inst_bg.lng",
+      "size": 5566,
+      "sha256": "9145cfe47d32cf3e45840ce0344da1d29810ef9d756ecddaebb803c59869e945",
+      "modifiedUtc": "2019-11-13T22:30:14.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_bn.lng",
+      "relativePath": "Languages\\inst_bn.lng",
+      "size": 15105,
+      "sha256": "d83bb2831c105089df476e8b3895ed858cf6275438a847b1e9661cea42ad23ca",
+      "modifiedUtc": "2021-02-12T15:43:18.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_chn.lng",
+      "relativePath": "Languages\\inst_chn.lng",
+      "size": 3838,
+      "sha256": "9e9ecc43f4e336f433c826b1b8e98478a1e0c7adc038ad39a18f75e5509dde58",
+      "modifiedUtc": "2022-01-18T04:44:18.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_cht.lng",
+      "relativePath": "Languages\\inst_cht.lng",
+      "size": 5196,
+      "sha256": "ea297e912d0cf36f2d973b9259bf8fabf622195d5481a11e7bd30967f213d950",
+      "modifiedUtc": "2020-10-09T08:02:02.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_cz.lng",
+      "relativePath": "Languages\\inst_cz.lng",
+      "size": 6862,
+      "sha256": "32195cea48b1dcce9fba43c07d8877ae6a17eaa634f1b00e2824164fc3e6ef63",
+      "modifiedUtc": "2016-08-14T04:14:46.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_de.lng",
+      "relativePath": "Languages\\inst_de.lng",
+      "size": 5255,
+      "sha256": "d90c3dcfd8352422ad358f475c06ef195bcf67555b5694dfb43ceb538152cfcf",
+      "modifiedUtc": "2016-05-02T18:04:44.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_dk.lng",
+      "relativePath": "Languages\\inst_dk.lng",
+      "size": 5584,
+      "sha256": "63bcffae56a6b30bcbb8b9dc1eff20636ef5dcc47bd5d58ca8bd3ccd7c7cd2cb",
+      "modifiedUtc": "2012-11-11T02:30:28.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_es.lng",
+      "relativePath": "Languages\\inst_es.lng",
+      "size": 8018,
+      "sha256": "07c8896550fbaa6e8fec792e15d240ded0bcffa258a928c1efd8542ff0385511",
+      "modifiedUtc": "2019-11-20T07:22:34.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_et.lng",
+      "relativePath": "Languages\\inst_et.lng",
+      "size": 7465,
+      "sha256": "e833865e3743ee1391f6ab48e4cdc3168775ef571c6bbb5f0c7dd310f4257aab",
+      "modifiedUtc": "2025-12-01T07:19:38.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_fa.lng",
+      "relativePath": "Languages\\inst_fa.lng",
+      "size": 4852,
+      "sha256": "4254e9579cfb2a2dca6c15205182b877a634d12b0a2d989bfd59a7050bd78dc0",
+      "modifiedUtc": "2016-05-18T06:05:12.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_fi.lng",
+      "relativePath": "Languages\\inst_fi.lng",
+      "size": 7400,
+      "sha256": "e6e3f23e72407ae19ebcbc28f6d5a6da496cd7833fea8c4abb576ed3ecf48985",
+      "modifiedUtc": "2025-12-01T07:21:12.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_fr.lng",
+      "relativePath": "Languages\\inst_fr.lng",
+      "size": 6867,
+      "sha256": "e09e37b0501f81d608ecb1a66172fdb4b86173447c2ba5c6d8a6454d0bb690ca",
+      "modifiedUtc": "2024-03-26T07:09:40.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_ge.lng",
+      "relativePath": "Languages\\inst_ge.lng",
+      "size": 14415,
+      "sha256": "2ecb7d7069585538f7b3e3a0387ee5c61a80d2e693eae189850fccd80f27a640",
+      "modifiedUtc": "2018-11-15T10:09:04.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_gr.lng",
+      "relativePath": "Languages\\inst_gr.lng",
+      "size": 7051,
+      "sha256": "84c92bd8ae5a90294d836851385fbf054b7af4d78744f4542147ac436a2a2644",
+      "modifiedUtc": "2015-01-27T06:46:54.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_gu.lng",
+      "relativePath": "Languages\\inst_gu.lng",
+      "size": 14985,
+      "sha256": "74fe02f9300ebb6309d6c657284fe7be4293a9b9ee075561d2e8ac4c6783bdbe",
+      "modifiedUtc": "2021-01-27T17:33:10.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_hi.lng",
+      "relativePath": "Languages\\inst_hi.lng",
+      "size": 14406,
+      "sha256": "912b486f50f6735b9d2c14f5bedfb79647f570e13bbef2354604d350fe1d313f",
+      "modifiedUtc": "2018-12-09T08:33:46.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_hu.lng",
+      "relativePath": "Languages\\inst_hu.lng",
+      "size": 6769,
+      "sha256": "f02e6c6f71d07d992ff20f8e74a28aa5f89c8deb6244b796dc897529bae9edf6",
+      "modifiedUtc": "2018-06-26T06:30:26.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_id.lng",
+      "relativePath": "Languages\\inst_id.lng",
+      "size": 6386,
+      "sha256": "02a5a39fcb25f8c1e928f3d9b3ff441c92e8fed9678ed55d2bf149c86fdd0226",
+      "modifiedUtc": "2022-06-21T07:42:10.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_it.lng",
+      "relativePath": "Languages\\inst_it.lng",
+      "size": 6721,
+      "sha256": "e927923cdec450ff540c5ff1ad25cf5109c39e62192d7fe39c2b918b15c3b49f",
+      "modifiedUtc": "2023-03-26T12:55:22.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_iw.lng",
+      "relativePath": "Languages\\inst_iw.lng",
+      "size": 4737,
+      "sha256": "d610c6905d7b173a572a192477857521a442f0fa3158f8db6a7d35eac5813ce3",
+      "modifiedUtc": "2023-07-31T23:10:36.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_jp.lng",
+      "relativePath": "Languages\\inst_jp.lng",
+      "size": 9789,
+      "sha256": "4ea82d8340ccbe745c114c1e2f326db4dd606401e3a3768e740f8a159d2e8971",
+      "modifiedUtc": "2023-05-07T12:24:20.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_kr.lng",
+      "relativePath": "Languages\\inst_kr.lng",
+      "size": 6427,
+      "sha256": "d69ad96b34ed4664ea75e253450b8d823b1c0320bf096dd79fc2164ade446e94",
+      "modifiedUtc": "2022-05-16T23:42:04.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_lao.lng",
+      "relativePath": "Languages\\inst_lao.lng",
+      "size": 14392,
+      "sha256": "4d3333604aad2a4888a6c2b665f6e61212398b8cd57ededa9fe1c38770d91e99",
+      "modifiedUtc": "2022-12-14T15:47:14.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_mm.lng",
+      "relativePath": "Languages\\inst_mm.lng",
+      "size": 18443,
+      "sha256": "e2c969766497a26bb2d6f62b4647f7f335cd481453ff9c66e4dcf54b34cf0160",
+      "modifiedUtc": "2020-04-17T22:46:40.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_mn.lng",
+      "relativePath": "Languages\\inst_mn.lng",
+      "size": 10309,
+      "sha256": "6e6a99ee5ac8e722dc8476ffc6932fbbf27176a20debfe895ef941e0fdbedfc0",
+      "modifiedUtc": "2025-06-11T19:49:38.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_my.lng",
+      "relativePath": "Languages\\inst_my.lng",
+      "size": 7623,
+      "sha256": "9619f587e3ef863b7fd69650dcbc1d655d6062c3f73eaf52aca59754ad856b83",
+      "modifiedUtc": "2020-08-01T16:54:44.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_nl.lng",
+      "relativePath": "Languages\\inst_nl.lng",
+      "size": 6358,
+      "sha256": "3ce76edce0d62dac238814558558395a1d4b748284cc96e65d3a7495398fb22b",
+      "modifiedUtc": "2022-06-16T06:52:38.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_pl.lng",
+      "relativePath": "Languages\\inst_pl.lng",
+      "size": 6323,
+      "sha256": "87c6559708b7deb7b3cf686994203cf035d0b16b8336859387af2b908ed05544",
+      "modifiedUtc": "2024-08-08T07:58:18.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_pt.lng",
+      "relativePath": "Languages\\inst_pt.lng",
+      "size": 6585,
+      "sha256": "da36c077ec7c96128d0e5ee5941fad1f779a58a33652d7190e814a75f8bc29ce",
+      "modifiedUtc": "2021-01-31T07:52:48.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_ptbr.lng",
+      "relativePath": "Languages\\inst_ptbr.lng",
+      "size": 6479,
+      "sha256": "fa33f7baeff604874d3ebeb320d04cc1087b6570e84311e756575288375de279",
+      "modifiedUtc": "2019-07-01T09:32:22.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_ru.lng",
+      "relativePath": "Languages\\inst_ru.lng",
+      "size": 5643,
+      "sha256": "99a003701c5e9c07dff37cd4b8d77e4669990ae638c417917c37be3955b8dab0",
+      "modifiedUtc": "2016-04-14T06:20:22.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_sk.lng",
+      "relativePath": "Languages\\inst_sk.lng",
+      "size": 6233,
+      "sha256": "4324f573298acdfa80cc9b23d9d8fd374e170bf550cc31915e4ec359b7bd6768",
+      "modifiedUtc": "2020-03-01T11:02:48.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_sr.lng",
+      "relativePath": "Languages\\inst_sr.lng",
+      "size": 7586,
+      "sha256": "b90fd5ed7991980ed7f48e1bc2aac1b630134d1dce07cc054c89d4d114f25cee",
+      "modifiedUtc": "2022-01-24T00:03:24.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_src.lng",
+      "relativePath": "Languages\\inst_src.lng",
+      "size": 4658,
+      "sha256": "9e28135ccb3f3d3dddfe741439e46af484578499eaf12f4ce4a399456ac09119",
+      "modifiedUtc": "2012-08-05T14:40:16.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_th.lng",
+      "relativePath": "Languages\\inst_th.lng",
+      "size": 6886,
+      "sha256": "d0f5ec56684e0dd2721d5fea20ed7331f58d9d500a91c0e7b35d872d0a75a627",
+      "modifiedUtc": "2025-06-11T16:55:42.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_tr.lng",
+      "relativePath": "Languages\\inst_tr.lng",
+      "size": 6558,
+      "sha256": "32604d04b3587405a9803be6277f2f7db4f0c138f7493194428aee296dd901dc",
+      "modifiedUtc": "2019-07-07T03:18:00.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_ua.lng",
+      "relativePath": "Languages\\inst_ua.lng",
+      "size": 5386,
+      "sha256": "93d4cfaa7a7c812e50bf176b26605931f9f014a80aefe4a9d4a41779d3609343",
+      "modifiedUtc": "2014-04-22T10:28:58.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_ug.lng",
+      "relativePath": "Languages\\inst_ug.lng",
+      "size": 11753,
+      "sha256": "be97f48cc1f12369a0d753e708c4cfead33dbdf2e5d22400f40a58bf6c32511f",
+      "modifiedUtc": "2020-03-03T06:24:44.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_uz.lng",
+      "relativePath": "Languages\\inst_uz.lng",
+      "size": 7335,
+      "sha256": "0fcdc63880b2eca559d7840874b1fa06f614bc29950ac0698b9e5b0abda150fa",
+      "modifiedUtc": "2016-04-21T03:34:06.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\inst_vn.lng",
+      "relativePath": "Languages\\inst_vn.lng",
+      "size": 7696,
+      "sha256": "4fa3de0d3cc3c4bbba684124d895c0f9398b4bf53284d41fdfb4665a78364542",
+      "modifiedUtc": "2016-07-17T23:40:36.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\template.lng",
+      "relativePath": "Languages\\template.lng",
+      "size": 114998,
+      "sha256": "805c3e95d665ce3d58ecc779e88ac02cb4181771b8a7ebaf1fe89f330168408e",
+      "modifiedUtc": "2026-08-17T13:59:34.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\template_inst.lng",
+      "relativePath": "Languages\\template_inst.lng",
+      "size": 7354,
+      "sha256": "354f1cd534472c398b4ebc6473bf4a8f56d7e7e1317ea795e96c0238cb41cd26",
+      "modifiedUtc": "2019-06-04T08:18:50.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_ar.txt",
+      "relativePath": "Languages\\tips_ar.txt",
+      "size": 2390,
+      "sha256": "d7aff9458064ac354ca043477354ae92059fa86e37b2dc236343b379910aeedf",
+      "modifiedUtc": "2021-12-11T22:24:24.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_chn.txt",
+      "relativePath": "Languages\\tips_chn.txt",
+      "size": 1457,
+      "sha256": "62bfa9561cf29b3164b35af5b33a108ef18e8b5b7455e583078410ec160be4fd",
+      "modifiedUtc": "2022-01-18T04:44:18.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_cht.txt",
+      "relativePath": "Languages\\tips_cht.txt",
+      "size": 2010,
+      "sha256": "1487a8fd4a297f7f0ce0ea7f1a2e763c2a09da298bc44c6b5e6c313f99371737",
+      "modifiedUtc": "2020-10-09T08:02:02.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_cz.txt",
+      "relativePath": "Languages\\tips_cz.txt",
+      "size": 2070,
+      "sha256": "07423e982aae40e8c780e6fa0d7b69d3c2ec96d3c249cf641caa931dc23915c7",
+      "modifiedUtc": "2016-08-14T04:14:46.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_de.txt",
+      "relativePath": "Languages\\tips_de.txt",
+      "size": 2806,
+      "sha256": "ae0dbb0bae59c4e4a4510df78188f69f05673455d1cbc22bf307af1e53d1be7a",
+      "modifiedUtc": "2007-06-16T15:22:10.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_es.txt",
+      "relativePath": "Languages\\tips_es.txt",
+      "size": 3039,
+      "sha256": "b33455bb142e25a41d73d9223154870eb525ee45602a2064a4b3f5e537a1c952",
+      "modifiedUtc": "2014-01-29T09:59:56.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_fa.txt",
+      "relativePath": "Languages\\tips_fa.txt",
+      "size": 6717,
+      "sha256": "9e64477f3dbdef227fe82bf7b38294ab7f4e8ed0b17d78b3f2e120d27d4706e5",
+      "modifiedUtc": "2014-08-24T04:09:50.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_fr.txt",
+      "relativePath": "Languages\\tips_fr.txt",
+      "size": 2993,
+      "sha256": "4a2b336b7d65d0a5d4db24ea1c08bed5a41181dbff2a2422e5f3b2491532edf1",
+      "modifiedUtc": "2024-12-05T01:07:34.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_gr.txt",
+      "relativePath": "Languages\\tips_gr.txt",
+      "size": 2719,
+      "sha256": "e2222852811b0329b0509a907e91d3014cc2f04b14738f7b243c5a658c926d76",
+      "modifiedUtc": "2015-01-27T06:47:04.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_hu.txt",
+      "relativePath": "Languages\\tips_hu.txt",
+      "size": 3183,
+      "sha256": "2e6a262ece276654637daf6469c025ec6bb1c9037cbcd2fa62dc7f7602da570e",
+      "modifiedUtc": "2003-07-14T06:20:02.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_id.txt",
+      "relativePath": "Languages\\tips_id.txt",
+      "size": 2218,
+      "sha256": "c32b8827748a47e157a19327d109b47ca63fac76e95e0774fd8a2f8a3c6d8918",
+      "modifiedUtc": "2022-06-21T07:42:10.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_it.txt",
+      "relativePath": "Languages\\tips_it.txt",
+      "size": 2801,
+      "sha256": "013527d65fb9297b7d47aaf4433203bf5f2ec3a6628a7a775e62209d35eea491",
+      "modifiedUtc": "2018-11-25T04:28:12.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_iw.txt",
+      "relativePath": "Languages\\tips_iw.txt",
+      "size": 2063,
+      "sha256": "f5a18ffec308e62a69a59e2ad6c8477a9d58e8575f03330bea4b343ab4be2cf9",
+      "modifiedUtc": "2023-07-31T23:18:40.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_jp.txt",
+      "relativePath": "Languages\\tips_jp.txt",
+      "size": 3213,
+      "sha256": "e2eb949fd81c262d9295487b7055d951df012c7c27f86289d736a51317e3ec60",
+      "modifiedUtc": "2023-05-07T12:24:18.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_kr.txt",
+      "relativePath": "Languages\\tips_kr.txt",
+      "size": 2507,
+      "sha256": "0ac59422dc451304111e6b37283d92298345a377c66d72ca6e100a330261323d",
+      "modifiedUtc": "2022-05-15T08:46:52.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_nl.txt",
+      "relativePath": "Languages\\tips_nl.txt",
+      "size": 2603,
+      "sha256": "8711d8628f7765cd35b07446045646af0fbe238da60ec55539189514cfd9023e",
+      "modifiedUtc": "2005-10-25T15:58:44.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_pl.txt",
+      "relativePath": "Languages\\tips_pl.txt",
+      "size": 2693,
+      "sha256": "ec08f6b0aff220295d110118b2c48c66492c7317fcd2082ca6e65ac1e3eacae2",
+      "modifiedUtc": "2015-06-11T16:19:32.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_ptbr.txt",
+      "relativePath": "Languages\\tips_ptbr.txt",
+      "size": 2613,
+      "sha256": "016577fc84e0072d931374be9003f1d24960f2e894b4fb2a2276402ba254b718",
+      "modifiedUtc": "2007-08-06T00:12:10.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_ru.txt",
+      "relativePath": "Languages\\tips_ru.txt",
+      "size": 2384,
+      "sha256": "01148b666d5b20fd281f510cfe591579aaf1cae0cfe4f6841e4ef635144f79f1",
+      "modifiedUtc": "2010-10-21T04:11:46.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_sk.txt",
+      "relativePath": "Languages\\tips_sk.txt",
+      "size": 3042,
+      "sha256": "e349e8a938c551a732d24b89fee54529c5927256fc20b7224c92ed0888df2b62",
+      "modifiedUtc": "2025-11-20T23:51:40.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_th.txt",
+      "relativePath": "Languages\\tips_th.txt",
+      "size": 1986,
+      "sha256": "13d598ac53ffa7ba7ecde47eb1fbae68355c9cd7eb8b118809bee5ec0395ae58",
+      "modifiedUtc": "2025-06-11T16:55:42.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_tr.txt",
+      "relativePath": "Languages\\tips_tr.txt",
+      "size": 2393,
+      "sha256": "dbcdeb6c400e7661c52ec7ff3d23e43a1c76977670bfb8a2df2782fbe9aa7e47",
+      "modifiedUtc": "2016-07-31T05:07:16.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Languages\\tips_vn.txt",
+      "relativePath": "Languages\\tips_vn.txt",
+      "size": 2565,
+      "sha256": "0dcc35a27b2e96d641d0db051baa9792de6f8190cb6e274ffb2fe81b8750c4e3",
+      "modifiedUtc": "2016-07-17T23:40:36.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\MediumILStart.exe",
+      "relativePath": "MediumILStart.exe",
+      "size": 53000,
+      "sha256": "a4fda3af1c386028b46629e6f5113b36aab7e76278ea6683b82eb575dfb9be7b",
+      "modifiedUtc": "2023-11-26T06:32:46.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Toolbar\\3d_largeHot_3.bmp",
+      "relativePath": "Toolbar\\3d_largeHot_3.bmp",
+      "size": 112952,
+      "sha256": "2c07b067a6b06c7d87d408e16f7047615b098db2328515e92166fdd6422e7099",
+      "modifiedUtc": "2009-02-06T08:57:22.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Toolbar\\3d_largeHot_3_hdpi15.bmp",
+      "relativePath": "Toolbar\\3d_largeHot_3_hdpi15.bmp",
+      "size": 254072,
+      "sha256": "eda9a334b8b18b02809537441be62656445a4bfb01e19efedf415514cda84476",
+      "modifiedUtc": "2013-09-27T06:47:28.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Toolbar\\3d_large_3.bmp",
+      "relativePath": "Toolbar\\3d_large_3.bmp",
+      "size": 112952,
+      "sha256": "9b6dc7965adc42116ecb2673e626dd9a6718c18ee9af7bec257dae7c4349ce99",
+      "modifiedUtc": "2009-02-06T08:56:50.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Toolbar\\3d_large_3_hdpi15.bmp",
+      "relativePath": "Toolbar\\3d_large_3_hdpi15.bmp",
+      "size": 254072,
+      "sha256": "6280e56ab091c78f17abecd01469b19fe078553a6fd77683ef818c4ae6e03f82",
+      "modifiedUtc": "2013-09-27T06:47:28.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Toolbar\\3d_smallHot_3.bmp",
+      "relativePath": "Toolbar\\3d_smallHot_3.bmp",
+      "size": 49208,
+      "sha256": "07a8b0d36ed6b93c31ec699c796c6d4ea4e487e80557a66d694fb3c7de0f58f8",
+      "modifiedUtc": "2009-02-06T10:14:28.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Toolbar\\3d_small_3.bmp",
+      "relativePath": "Toolbar\\3d_small_3.bmp",
+      "size": 49208,
+      "sha256": "d1e37d43e9dfa1bc8cc5b9abbfbf8368a3d7fc9db9b2babcfce2433ef7260bb7",
+      "modifiedUtc": "2009-02-06T10:15:00.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Toolbar\\3d_style_3.tbi",
+      "relativePath": "Toolbar\\3d_style_3.tbi",
+      "size": 180,
+      "sha256": "dda7fe7637626c6f47f859fd377cc41b93aaf101c9dcd6d7677b9f8c84293464",
+      "modifiedUtc": "2013-09-27T07:17:42.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\Uninstall.exe",
+      "relativePath": "Uninstall.exe",
+      "size": 167280,
+      "sha256": "6f6201b354dbf3c59c3bb0c01cd32264d9f68e0d3ad03b0681f5fbb629c40c83",
+      "modifiedUtc": "2026-03-18T16:47:50.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\defexclist.txt",
+      "relativePath": "defexclist.txt",
+      "size": 3725,
+      "sha256": "0bc91b5ecd5a230c67fec0dfbb66de80f1323ad990e388e5c75d095acabdafaa",
+      "modifiedUtc": "2024-06-13T09:18:22.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\downlWithIDM.dll",
+      "relativePath": "downlWithIDM.dll",
+      "size": 202552,
+      "sha256": "38ac192d707f3ec697dd5fe01a0c6fc424184793df729f427c0cf5dfab6705fe",
+      "modifiedUtc": "2019-11-08T15:05:12.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\downlWithIDM64.dll",
+      "relativePath": "downlWithIDM64.dll",
+      "size": 159288,
+      "sha256": "8a51ece1c4c8bcb8c56ca10cb9d97bff0dfe75052412a8d8d970a5eb6933427b",
+      "modifiedUtc": "2019-05-04T10:29:26.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\grabber.chm",
+      "relativePath": "grabber.chm",
+      "size": 132285,
+      "sha256": "b46d8878e0cbd7a7a2f12de909cd94cf424fa07838a39434146f772784481137",
+      "modifiedUtc": "2005-12-14T04:20:22.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmBroker.exe",
+      "relativePath": "idmBroker.exe",
+      "size": 156984,
+      "sha256": "97810e0b3838a7dca94d73a8b9e170107642b064713c084c231de6632cb68a9c",
+      "modifiedUtc": "2019-11-08T15:06:48.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idman.chm",
+      "relativePath": "idman.chm",
+      "size": 320931,
+      "sha256": "9e06f65bfa76d1355b44498774b8f96a69c54daad2fd6cc9a0fd9338751d23b5",
+      "modifiedUtc": "2011-03-02T02:36:56.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmantypeinfo.tlb",
+      "relativePath": "idmantypeinfo.tlb",
+      "size": 2596,
+      "sha256": "d421d11ef7cf2b766ca6fbc8e837912b2100339c686d48ca56f650649f7b9343",
+      "modifiedUtc": "2004-02-08T00:39:18.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmbrbtn.dll",
+      "relativePath": "idmbrbtn.dll",
+      "size": 232304,
+      "sha256": "554870a6a6bf501eabb99f915bd9a0f181c69742bf35dfb58da30a3b77aff32a",
+      "modifiedUtc": "2026-11-03T07:53:00.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmbrbtn64.dll",
+      "relativePath": "idmbrbtn64.dll",
+      "size": 244080,
+      "sha256": "4ef4847f0a2aa085058bb89fe4641b61b648622231517db64d76606eb6865303",
+      "modifiedUtc": "2026-11-03T07:53:02.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmcchandler2.dll",
+      "relativePath": "idmcchandler2.dll",
+      "size": 333848,
+      "sha256": "1450146b904919474ef6d528b20a672a33a32afc4a1e40f69d515b523d72fa19",
+      "modifiedUtc": "2026-11-06T06:32:08.358Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmcchandler2_64.dll",
+      "relativePath": "idmcchandler2_64.dll",
+      "size": 461848,
+      "sha256": "59ac02f5a0644bf56b7ad7e2b48fc8f89083f8cfe12a0a93f63163a5573a876f",
+      "modifiedUtc": "2026-11-06T06:32:08.365Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmcchandler7.dll",
+      "relativePath": "idmcchandler7.dll",
+      "size": 405304,
+      "sha256": "e1a4dea06f184be2357be4c72ac5315776f0dce251c0c7fa5f1fa927da69b9bc",
+      "modifiedUtc": "2020-12-11T17:30:28.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmcchandler7_64.dll",
+      "relativePath": "idmcchandler7_64.dll",
+      "size": 753976,
+      "sha256": "d464e8e7c84cb2fc62eacf932e841bbd73c3294a37812ccee7ffbbb9e01572a6",
+      "modifiedUtc": "2020-12-11T17:30:32.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmfc.dat",
+      "relativePath": "idmfc.dat",
+      "size": 5040,
+      "sha256": "05def0184416d4a17d41939008cede16d264fa9c094db77c5edf6749f787d9e4",
+      "modifiedUtc": "2026-03-02T20:22:28.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmfsa.dll",
+      "relativePath": "idmfsa.dll",
+      "size": 92416,
+      "sha256": "801d3a802a641212b54c9f0ef0d762b08bcca9ab4f2c8603d823a1c1bc38c75a",
+      "modifiedUtc": "2024-10-17T10:19:34.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmftype.dll",
+      "relativePath": "idmftype.dll",
+      "size": 43976,
+      "sha256": "3a47dbb1f86f2c51f3f8fb9c3a8b1309f5e182ab9af55179959104d262ce985d",
+      "modifiedUtc": "2013-03-20T09:43:34.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmindex.dll",
+      "relativePath": "idmindex.dll",
+      "size": 437272,
+      "sha256": "1fdb0d5b31e080084c82e0b773dafc7860fa860938b8baef6a4d7f5bde659f73",
+      "modifiedUtc": "2015-08-26T02:56:46.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmmkb.dll",
+      "relativePath": "idmmkb.dll",
+      "size": 34104,
+      "sha256": "8a10c135de47b2f143f97a5c472c2e4cc0256b278304803aeca5f419b0a00494",
+      "modifiedUtc": "2020-03-12T11:01:54.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmmzcc.xpi",
+      "relativePath": "idmmzcc.xpi",
+      "size": 430046,
+      "sha256": "f09d39e7a1a2e2ec8bd40507c57e9a8895a897e3a2aa31a99d0b97c8da95da89",
+      "modifiedUtc": "2015-09-27T02:58:54.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmmzcc2.xpi",
+      "relativePath": "idmmzcc2.xpi",
+      "size": 30386,
+      "sha256": "e691ebadd8c6e7a07d9c8c931f4760f9aadd2b151019e4f17a76a1665057c9cb",
+      "modifiedUtc": "2017-12-19T03:58:30.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmmzcc3.xpi",
+      "relativePath": "idmmzcc3.xpi",
+      "size": 110094,
+      "sha256": "9cfa94b69b654b39fe06ad240dca0b90e5317860a6c69f4cef22c38f097d587a",
+      "modifiedUtc": "2026-06-10T13:47:16.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmmzcc7.dll",
+      "relativePath": "idmmzcc7.dll",
+      "size": 27672,
+      "sha256": "1621fd14dd72dcce8bba2e7f46d656744d2975f8ad94b36d2ade01415f48022a",
+      "modifiedUtc": "2015-07-30T06:13:40.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmmzcc7_64.dll",
+      "relativePath": "idmmzcc7_64.dll",
+      "size": 107320,
+      "sha256": "c44fd11a6973f028cff24b016e3cf0ea8af76c4f9f73c7848cbb0deed37218b9",
+      "modifiedUtc": "2019-11-08T17:13:06.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmtdi.cat",
+      "relativePath": "idmtdi.cat",
+      "size": 17569,
+      "sha256": "2d7bd6f8453c179516c5b322ae7bb95953c20cc7fba229750da0f3ae9da6e90d",
+      "modifiedUtc": "2018-12-18T06:35:00.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmtdi.inf",
+      "relativePath": "idmtdi.inf",
+      "size": 2166,
+      "sha256": "2bf28c3f95eafafba13bbb79d90a8c6c3799270f0eebbed5aa8fe8e1ad967854",
+      "modifiedUtc": "2018-12-18T06:35:00.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmtdi32.sys",
+      "relativePath": "idmtdi32.sys",
+      "size": 144960,
+      "sha256": "3eb60c4d9ac3d447a1a995bef83e08fa7c117f573f557ca750d6638e919d63bd",
+      "modifiedUtc": "2018-12-18T06:35:00.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmtdi64.sys",
+      "relativePath": "idmtdi64.sys",
+      "size": 231776,
+      "sha256": "84382bf4c10bd0eec67cfa4349734363a6bdb1d6487050972028f1019a101cdb",
+      "modifiedUtc": "2018-12-18T06:35:00.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmvs.dll",
+      "relativePath": "idmvs.dll",
+      "size": 21248,
+      "sha256": "a2e28177b51a556742a164955f8b62dcf2bdf848c2f6907fea0c92ee8e4ccddd",
+      "modifiedUtc": "2025-03-26T08:45:22.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmwfp.cat",
+      "relativePath": "idmwfp.cat",
+      "size": 13319,
+      "sha256": "36dd39268ac667c3e6600914a62bcdabcef930e50863f1193ea92c6fc9908a8e",
+      "modifiedUtc": "2026-06-15T01:25:26.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmwfp.inf",
+      "relativePath": "idmwfp.inf",
+      "size": 2563,
+      "sha256": "375b63ff4a9d37cbb9751415a735237d4c1a5b8619503e5805217d54b856f1f8",
+      "modifiedUtc": "2026-06-15T01:25:26.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmwfp32.sys",
+      "relativePath": "idmwfp32.sys",
+      "size": 157368,
+      "sha256": "a9915728125bdc57e61d6f86169a247bc42f514e82c85e0e30ba17d7f84f2b25",
+      "modifiedUtc": "2026-06-15T01:25:26.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmwfp64.sys",
+      "relativePath": "idmwfp64.sys",
+      "size": 187064,
+      "sha256": "8acffb0181146e96c44a94c5b364d657b775936ebb4d0fcce591068f74803c4a",
+      "modifiedUtc": "2026-06-15T01:25:26.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\idmwfpAA.sys",
+      "relativePath": "idmwfpAA.sys",
+      "size": 187064,
+      "sha256": "fd646cfc32db827ff69d96759fe744cf681aefa87b0a791e76c46bfccf81de74",
+      "modifiedUtc": "2026-06-15T01:25:26.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\libcrypto.dll",
+      "relativePath": "libcrypto.dll",
+      "size": 1798512,
+      "sha256": "fab842758f11b746f20b3a94f7d4c5adfeeaada4a20e59514bef49ecd731421b",
+      "modifiedUtc": "2026-10-26T13:39:24.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\libssl.dll",
+      "relativePath": "libssl.dll",
+      "size": 380272,
+      "sha256": "af9a226b70736e4e763578119c31ad67cb39ad8198a2cc933ed4dc5d08a20bc5",
+      "modifiedUtc": "2026-10-26T13:39:26.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\license.txt",
+      "relativePath": "license.txt",
+      "size": 3752,
+      "sha256": "b8efabf5f8ac525b049069819a5ec426f01d9249f72f07a3bd7d4f3385aca924",
+      "modifiedUtc": "2024-10-31T13:05:42.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\oldjsproxy.dll",
+      "relativePath": "oldjsproxy.dll",
+      "size": 45568,
+      "sha256": "8fcca62c1d53a0c331768cf309bf7bf9df2ffc356fa254c85bd77a3582240578",
+      "modifiedUtc": "2023-08-05T11:47:18.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\openssl-license.txt",
+      "relativePath": "openssl-license.txt",
+      "size": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "modifiedUtc": "2020-02-08T07:33:12.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\scheduler.chm",
+      "relativePath": "scheduler.chm",
+      "size": 45478,
+      "sha256": "efe6bbefa4d251c728f60a62b36317d086e770e8719d10cc33245ecfa4800d73",
+      "modifiedUtc": "2008-07-13T02:27:14.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\tips.txt",
+      "relativePath": "tips.txt",
+      "size": 2057,
+      "sha256": "f637a5cba06120ec6c298418510912548f46d2ca0d5d456aa1a7de15abc3292b",
+      "modifiedUtc": "2023-03-11T16:26:04.000Z"
+    },
+    {
+      "path": "C:\\Program Files (x86)\\Internet Download Manager\\tutor.chm",
+      "relativePath": "tutor.chm",
+      "size": 50228,
+      "sha256": "c72c0897eb3f38d0e921fb7c4201631894ef53b6f07015be37f506074ad60978",
+      "modifiedUtc": "2008-07-14T02:25:26.000Z"
+    },
+    {
+      "path": "C:\\Users\\Flugel\\Downloads\\idman643build18.exe",
+      "relativePath": "[installer]\\idman643build18.exe",
+      "size": 12164608,
+      "sha256": "7346128fab42957b4254eabdb012bfdbd751e9069361e98a6916f26bb03d62ee",
+      "modifiedUtc": "2026-11-06T06:31:17.022Z"
+    }
+  ],
+  "errors": []
+}

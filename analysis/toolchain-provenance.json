@@ -1,0 +1,34 @@
+{
+  "record_id": "local-toolchain-provenance-2026-11-06",
+  "rea": {
+    "installed_package": "C:\\Users\\Flugel\\AppData\\Local\\npm-cache\\_npx\\a1722018f28f9df2\\node_modules\\rea-agents",
+    "version": "6.7.0",
+    "cli_help_inspected": ["analyze", "search", "decompile", "function", "xrefs", "evidence-export"],
+    "downloaded": false
+  },
+  "ghidra": {
+    "path": "C:\\Users\\Flugel\\ghidra\\ghidra_12.1_PUBLIC",
+    "application_properties_version": "12.1",
+    "application_build_date": "2026-May-13 1544 GMT",
+    "application_revision": "7e89d94e3478f0b1931c34882a0f606fdb06961f",
+    "official_distribution_zip_found": false,
+    "distribution_zip_search_boundary": "Recursive filename search **/*ghidra*.zip under C:\\Users\\Flugel; matches only bundled extension zip files, not distribution zip.",
+    "official_release_digest_validated": false,
+    "installed_file_provenance": "unknown; version metadata and successful launch do not authenticate installed files",
+    "downloaded": false
+  },
+  "java": {
+    "path": "C:\\Users\\Flugel\\jdk21\\jdk-21.0.12.1+1",
+    "java_version_observation": "openjdk version 21.0.12.1 2026-08-18 LTS; Temurin-21.0.12.1+1; 64-Bit Server VM",
+    "installed_file_provenance": "unknown; no release archive/digest validation performed",
+    "downloaded": false
+  },
+  "scope": {
+    "environment_changes": "GHIDRA_INSTALL_DIR, JAVA_HOME, TEMP, TMP set only for spawned analysis processes",
+    "global_mcp_or_client_config_changed": false,
+    "target_executable_run": false,
+    "installer_run": false,
+    "original_installation_modified": false,
+    "analysis_outputs_root": "C:\\Users\\Flugel\\Projects\\StreamHarbor\\analysis"
+  }
+}

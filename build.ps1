@@ -14,7 +14,8 @@ if(!$SkipTests){
 }
 Run-Dotnet @('publish','app/Harbor.Desktop/Harbor.Desktop.csproj','-c','Release','-r','win-x64','--self-contained','false','-o','artifacts/Harbor.Desktop','--nologo')
 Run-Dotnet @('publish','app/Harbor.NativeHost/Harbor.NativeHost.csproj','-c','Release','-r','win-x64','--self-contained','false','-o','artifacts/Harbor.NativeHost','--nologo')
-Copy-Item browser artifacts/browser -Recurse -Force
+New-Item -ItemType Directory -Force artifacts/browser | Out-Null
+Copy-Item browser/* artifacts/browser -Recurse -Force
 Get-ChildItem artifacts -Recurse -File | Where-Object Name -ne 'SHA256SUMS.txt' | ForEach-Object {
  $hash=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
  "$hash  $($_.FullName.Substring((Join-Path $PSScriptRoot 'artifacts').Length+1))"
