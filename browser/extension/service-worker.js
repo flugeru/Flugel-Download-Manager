@@ -77,7 +77,21 @@ function recordMedia(tabId, meta) {
   let map = tabMedia.get(tabId);
   if (!map) { map = new Map(); tabMedia.set(tabId, map); }
   map.set(meta.url, meta);
-  while (map.size > MAX_PER_TAB) map.delete(map.keys().next().value);
+while (map.size > MAX_PER_TAB) map.delete(map.keys().next().value);
+// MV3 workers suspend between popup actions; keep metadata in browser-session memory only.
+chrome.storage.session.set({ ["media:" + tabId]: [...map.values()] }).catch(() => {});
+}
+
+async function mediaForTab(tabId) {
+const map = tabMedia.get(tabId);
+if (map) return [...map.values()];
+const stored = await chrome.storage.session.get("media:" + tabId);
+return stored["media:" + tabId] || [];
+}
+
+function clearTabMedia(tabId) {
+tabMedia.delete(tabId);
+chrome.storage.session.remove("media:" + tabId).catch(() => {});
 }
 
 // Session cookies are sent only when the user has enabled them for this site (or a parent domain).
@@ -196,8 +210,8 @@ function typedName(url, type) {
   return `${base}.${ext}`;
 }
 
-chrome.tabs.onRemoved.addListener((tabId) => tabMedia.delete(tabId));
-chrome.tabs.onUpdated.addListener((tabId, info) => { if (info.status === "loading") tabMedia.delete(tabId); });
+chrome.tabs.onRemoved.addListener(clearTabMedia);
+chrome.tabs.onUpdated.addListener((tabId, info) => { if (info.status === "loading") clearTabMedia(tabId); });
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
@@ -206,12 +220,18 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       sendResponse(r);
       return;
     }
-    if (msg?.type === "get-page-media") {
-      const tabId = sender?.tab?.id ?? -1;
-      const map = tabMedia.get(tabId);
-      sendResponse({ media: map ? [...map.values()] : [] });
-      return;
-    }
+if (msg?.type === "get-page-media") {
+const tabId = sender?.tab?.id ?? (await chrome.tabs.query({ active: true, currentWindow: true }))[0]?.id ?? -1;
+sendResponse({ media: await mediaForTab(tabId) });
+return;
+}
+if (msg?.type === "enqueue-detected-media" && !sender.tab) {
+const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+const media = (await mediaForTab(tab?.id ?? -1)).find(m => m.url === msg.url);
+if (!media) { sendResponse({ ok: false, error: "media-not-found" }); return; }
+sendResponse(await enqueueLink(media.url, { fileName: media.fileName, referrer: tab.url, pageTitle: tab.title || "" }));
+return;
+}
     if (msg?.type === "get-config") {
       const d = await chrome.storage.local.get(["globalEnabled", "balloonEnabled", "autoIntercept"]);
       sendResponse({ ok: true, config: { globalEnabled: d.globalEnabled !== false, balloonEnabled: d.balloonEnabled !== false, autoIntercept: d.autoIntercept === true } });

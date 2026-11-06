@@ -57,6 +57,29 @@ function checkBridge() {
         : "Ponte nativa incompatível. Atualize o aplicativo.";
   });
 }
+async function loadDetectedMedia() {
+try {
+const response = await chrome.runtime.sendMessage({ type: "get-page-media" });
+if (!response?.media?.length) return;
+$("detectedMedia").replaceChildren();
+for (const media of response.media) {
+const button = document.createElement("button");
+button.type = "button";
+button.textContent = "Baixar no Flugel: " + media.fileName;
+button.style.cssText = "display:block;max-width:320px;overflow-wrap:anywhere;text-align:left";
+button.addEventListener("click", async () => {
+button.disabled = true;
+try {
+const result = await chrome.runtime.sendMessage({ type: "enqueue-detected-media", url: media.url });
+$("status").textContent = result?.ok ? "Confirme o download no aplicativo." : "Falha no envio: " + (result?.error || "sem resposta");
+} catch { $("status").textContent = "Falha ao conectar com o aplicativo."; }
+finally { button.disabled = false; }
+});
+$("detectedMedia").append(button);
+}
+} catch { $("detectedMedia").textContent = "Recarregue a extensão e a página para detectar arquivos."; }
+}
 $("checkBridge").addEventListener("click", checkBridge);
 load();
 checkBridge();
+loadDetectedMedia();

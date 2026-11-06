@@ -11,13 +11,18 @@ let listener;
 let nativeError;
 let storedFlags = {};
 let cookieJar = [];
+const session = {};
+const activeTab = { id: 7, url: 'https://nuvem.anitsu.moe/', title: 'Test' };
 const event = { addListener() {} };
 const chrome = {
   action: { setBadgeText() {}, setBadgeBackgroundColor() {}, setTitle() {} },
   contextMenus: { onClicked: event },
-  tabs: { onRemoved: event, onUpdated: event },
+  tabs: { onRemoved: event, onUpdated: event, async query() { return [activeTab]; } },
   webRequest: { onBeforeRequest: event, onHeadersReceived: event },
-  storage: { local: { async get(keys) { const out = {}; for (const k of keys) if (k in storedFlags) out[k] = storedFlags[k]; return out; } } },
+  storage: {
+    local: { async get(keys) { const out = {}; for (const k of keys) if (k in storedFlags) out[k] = storedFlags[k]; return out; } },
+    session: { async get(key) { return { [key]: session[key] }; }, async set(values) { Object.assign(session, values); }, async remove(key) { delete session[key]; } }
+  },
   cookies: { async getAll({ url }) { requests.push({ cookieLookup: url }); return cookieJar; } },
   runtime: {
     onInstalled: event,
@@ -43,6 +48,13 @@ const nuvem = 'https://nuvem.anitsu.moe/api/download?path=Animes%2FLetra%20Y%2FY
   assert.equal(context.mediaNameFromUrl('https://example.test/watch?id=7'), null);
   assert.equal(context.mediaNameFromUrl('https://example.test/page.html'), null);
   assert.equal(context.typedName('https://example.test/api/download', 'video/x-matroska'), 'download.mkv');
+  context.recordMedia(7, { url: nuvem, fileName: 'episode.mkv' });
+  const message = (msg, sender = {}) => new Promise(resolve => listener(msg, sender, resolve));
+  assert.equal((await message({ type: 'get-page-media' })).media.length, 1);
+  vm.runInContext('tabMedia.clear()', context);
+  assert.equal((await message({ type: 'get-page-media' })).media.length, 1, 'worker suspension lost detected media');
+  assert.equal((await message({ type: 'get-page-media' }, { tab: { id: 8 } })).media.length, 0);
+  assert.equal((await message({ type: 'enqueue-detected-media', url: 'https://unknown.test/' })).error, 'media-not-found');
 
   const send = payload => new Promise(resolve => listener({ type: 'enqueue-media', payload }, {}, resolve));
 
@@ -61,6 +73,11 @@ const nuvem = 'https://nuvem.anitsu.moe/api/download?path=Animes%2FLetra%20Y%2FY
   assert.equal(withSite.action, 'enqueue-media');
   assert.equal(withSite.cookie, 'session=abc; lang=pt');
   assert.equal(requests.find(r => r.cookieLookup)?.cookieLookup, nuvem);
+  requests.length = 0;
+  assert.equal((await message({ type: 'enqueue-detected-media', url: nuvem })).ok, true);
+  assert.equal(requests.find(r => r.action).fileName, 'episode.mkv');
+  assert.equal(requests.find(r => r.action).cookie, 'session=abc; lang=pt');
+  assert.equal((await message({ type: 'enqueue-detected-media', url: nuvem }, { tab: activeTab })).error, 'unknown-message');
 
   // Parent-domain permission covers the file host; unrelated sites never receive cookies.
   requests.length = 0;
