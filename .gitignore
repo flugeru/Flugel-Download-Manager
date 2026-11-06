@@ -1,0 +1,15 @@
+**/bin/
+**/obj/
+artifacts/
+analysis/extracted/
+analysis/integration-packages/
+analysis/ghidra-work/
+analysis/idm-sample.bin
+Downloads/
+analysis/*.zip
+analysis/*.exe
+analysis/*.dll
+analysis/*.xpi
+analysis/*.crx
+test-output/
+*.user
