@@ -170,7 +170,8 @@ internal sealed class AddDialog : FormDialog
                     MediaQualityLabel = options.MediaQualityLabel,
                     MediaSegmentUrls = options.MediaSegmentUrls,
                     CookieHeader = options.CookieHeader,
-                    UserAgent = options.UserAgent
+                    UserAgent = options.UserAgent,
+                    RequestId = options.RequestId
                 });
                 StartedNow = scheduledAt is null && _startNow.IsChecked == true;
                 CloseOk();

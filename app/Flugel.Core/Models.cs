@@ -103,6 +103,8 @@ public sealed class AddDownloadOptions
     public bool ResolveServerFileName { get; set; }
     public string? MediaQualityLabel { get; set; }
     public List<string>? MediaSegmentUrls { get; set; }
+    // Correlation id from the browser extension so the handoff can be reconciled after crashes.
+    public string? RequestId { get; set; }
 }
 
 public sealed record UrlProbeResult(

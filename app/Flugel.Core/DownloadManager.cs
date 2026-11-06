@@ -216,6 +216,7 @@ public sealed class DownloadManager : IAsyncDisposable
                 MaxBytesPerSecond = options.MaxBytesPerSecond is > 0 ? options.MaxBytesPerSecond : null,
                 ResolveServerFileName = options.ResolveServerFileName && string.IsNullOrWhiteSpace(options.FileName),
                 MediaQualityLabel = options.MediaQualityLabel,
+                RequestId = SanitizeRequestId(options.RequestId),
                 MediaSegmentUrls = options.MediaSegmentUrls is { Count: > 0 } ? [.. options.MediaSegmentUrls] : null,
                 CreatedAt = DateTimeOffset.UtcNow,
                 State = initialState
@@ -948,6 +949,34 @@ public sealed class DownloadManager : IAsyncDisposable
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
+    // Correlation id minted by the extension (UUID). Not a secret; safe to store and display.
+    private static string? SanitizeRequestId(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        value = value.Trim();
+        return value.Length <= 64 && value.All(c => char.IsAsciiLetterOrDigit(c) || c == '-') ? value : null;
+    }
+
+    // Durable-acceptance lookup: a persisted job confirms the handoff even after an app restart.
+    public bool TryGetJobByRequestId(string requestId, out string? jobId)
+    {
+        var id = SanitizeRequestId(requestId);
+        lock (gate)
+        {
+            if (id is not null)
+            {
+                foreach (var job in jobs)
+                {
+                    if (job.Removed || !string.Equals(job.RequestId, id, StringComparison.Ordinal)) continue;
+                    jobId = job.Id;
+                    return true;
+                }
+            }
+        }
+        jobId = null;
+        return false;
+    }
+
     private async Task<HttpResponseMessage> SendAsync(
         string url,
         long? from,
@@ -1296,6 +1325,7 @@ public sealed class DownloadManager : IAsyncDisposable
         public string Description { get; set; } = "";
         public string? Referrer { get; set; }
         public string? UserAgent { get; set; }
+        public string? RequestId { get; set; }
         public long? MaxBytesPerSecond { get; set; }
         public bool ResolveServerFileName { get; set; }
         public string? MediaQualityLabel { get; set; }

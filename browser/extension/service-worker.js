@@ -184,7 +184,7 @@ function sendNative(request) {
           return resolve({ ok: false, error });
         }
         const ok = response?.version === 1 && response?.status === "accepted-for-confirmation";
-        resolve({ ok, error: ok ? undefined : response?.error || "invalid-host-response" });
+        resolve({ ok, status: response?.status, error: ok ? undefined : response?.error || "invalid-host-response" });
       });
     } catch {
       resolve({ ok: false, error: "host-unavailable" });
@@ -192,7 +192,7 @@ function sendNative(request) {
   });
 }
 
-async function enqueueLink(url, extra = {}) {
+async function enqueueLink(url, extra = {}, requestId = null) {
 const clean = cleanUrl(url);
 if (!clean) { badge(false, "Flugel Download Manager: invalid or unsafe URL"); return { ok: false, error: "invalid-url" }; }
 if (contextFor(clean)?.blocked) {
@@ -200,6 +200,7 @@ badge(false, "Flugel Download Manager: this request must continue in the browser
 return { ok: false, error: "unsupported-request-method" };
 }
   const request = { version: 1, action: "enqueue", url: clean };
+  if (requestId) request.requestId = requestId; // Extension correlation id for durable handoff reconciliation.
   for (const key of ["fileName", "referrer", "pageTitle", "mediaQuality"]) {
     if (typeof extra[key] === "string" && extra[key].length > 0) request[key] = extra[key];
   }
@@ -209,10 +210,13 @@ const userAgent = contextFor(clean)?.userAgent;
 if (userAgent) request.userAgent = userAgent;
   const cookie = await sessionCookieHeader(clean, extra.pageUrl || extra.referrer || "").catch(() => null);
   if (cookie) request.cookie = cookie;
-  if (Object.keys(request).length > 3) request.action = "enqueue-media";
+  if (Object.keys(request).length > (requestId ? 4 : 3)) request.action = "enqueue-media";
   const result = await sendNative(request);
-  badge(result.ok, result.ok ? "Flugel Download Manager: accepted for desktop confirmation" : "Flugel Download Manager: host unavailable or request rejected");
-  return result;
+  // A correlated handoff is accepted when the desktop (or launch) took the request; canceling
+  // happens only later, after a durable "confirmed" outcome from the job-status poll.
+  const ok = result.ok || (!!requestId && (result.status === "waiting-user-confirmation" || result.status === "launching"));
+  badge(ok, ok ? "Flugel Download Manager: accepted for desktop confirmation" : "Flugel Download Manager: host unavailable or request rejected");
+  return { ok, status: result.status, requestId, error: ok ? undefined : result.error };
 }
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -289,7 +293,51 @@ function typedName(url, type) {
 chrome.tabs.onRemoved.addListener(clearTabMedia);
 chrome.tabs.onUpdated.addListener((tabId, info) => { if (info.status === "loading") clearTabMedia(tabId); });
 
-// Pause first, cancel only after desktop acceptance; otherwise restore the browser.
+// Intercepted handoffs wait for a durable desktop outcome before canceling the browser copy.
+// The ledger holds only a correlation id, download id, and timestamps — never cookies or tokens.
+// `let` so the mocked test harness can shorten the window; production values are used at runtime.
+let HANDOFF_POLL_DELAY_MS = 1500;
+let HANDOFF_DEADLINE_MS = 120000;
+const sleep = delay => new Promise(resolve => setTimeout(resolve, delay));
+
+function pendingKey(requestId) { return "pending:" + requestId; }
+async function ledgerSet(requestId, entry) { await chrome.storage.session.set({ [pendingKey(requestId)]: entry }); }
+async function ledgerDrop(requestId) { await chrome.storage.session.remove(pendingKey(requestId)); }
+async function ledgerAll() {
+  const stored = await chrome.storage.session.get(null).catch(() => ({}));
+  return Object.entries(stored).filter(([key, entry]) => key.startsWith("pending:") && entry && typeof entry === "object");
+}
+
+// Durable acceptance: only "confirmed" (a persisted job exists) cancels the paused browser copy.
+// "rejected"/"unknown-request" or the deadline restore it, so closing the dialog never loses data.
+async function awaitHandoff(requestId, item) {
+  const deadline = Date.now() + HANDOFF_DEADLINE_MS;
+  while (Date.now() < deadline) {
+    await sleep(HANDOFF_POLL_DELAY_MS);
+    let poll;
+    try { poll = await sendNative({ version: 1, action: "job-status", requestId }); }
+    catch { continue; }
+    if (poll.status === "confirmed") return "confirmed";
+    if (poll.status === "rejected" || poll.status === "unknown-request") return poll.status;
+    // waiting-user-confirmation, launching, desktop-unavailable, or unknown responses keep waiting.
+  }
+  return "expired";
+}
+
+// Reconciliation after worker or desktop death: restore own paused copies, never user-paused ones.
+async function reconcileHandoffs() {
+  try {
+    for (const [key, entry] of await ledgerAll()) {
+      const id = typeof entry.downloadId === "number" ? entry.downloadId : null;
+      if (id === null || Date.now() - entry.startedAt < HANDOFF_DEADLINE_MS) continue;
+      await chrome.storage.session.remove(key);
+      try { await chrome.downloads.resume(id); }
+      catch { /* Item is gone, completed, or canceled; nothing to restore. */ }
+    }
+  } catch { /* Session storage unavailable; downloads stay in the browser. */ }
+}
+
+// Pause first, cancel only after the desktop durably accepts; otherwise restore the browser.
 async function interceptDownload(item) {
 if (item.state !== "in_progress" || item.paused || item.byExtensionId || item.incognito) return;
 const originalUrl = cleanUrl(item.url);
@@ -298,36 +346,60 @@ if (!url) return; // blob/data downloads cannot be fetched independently by the 
 // POST/body replay is not implemented; unknown or ambiguous methods stay in the browser.
 const observed = contextFor(url);
 if (!observed || observed.blocked || contextFor(originalUrl)?.blocked) return;
+if ((await ledgerAll()).some(([, entry]) => entry.downloadId === item.id)) return; // Already handing off.
 const pageUrl = cleanUrl(item.referrer) || url;
-let paused = false;
 try {
 const flags = await chrome.storage.local.get(["globalEnabled", "autoIntercept", "site:" + hostOf(pageUrl)]);
 if (flags.globalEnabled === false || flags.autoIntercept !== true || flags["site:" + hostOf(pageUrl)] === false) return;
+} catch { /* Automatic-interception options are unavailable; do not touch the download. */ }
+const requestId = crypto.randomUUID();
+await ledgerSet(requestId, { downloadId: item.id, startedAt: Date.now() });
+let paused = false;
+try {
 await chrome.downloads.pause(item.id);
 paused = true;
 let tab;
 if (observed.tabId >= 0) tab = await chrome.tabs.get(observed.tabId).catch(() => null);
 const fileName = fileNameForDownload(item, observed, tab?.title);
-const result = await enqueueLink(url, { fileName, referrer: cleanUrl(item.referrer) || undefined, pageTitle: tab?.title });
-if (result.ok) {
+const enqueue = await enqueueLink(url, { fileName, referrer: cleanUrl(item.referrer) || undefined, pageTitle: tab?.title }, requestId);
+if (enqueue.ok) {
+badge(true, "Flugel Download Manager: waiting for desktop confirmation");
+let outcome;
+try { outcome = await awaitHandoff(requestId, item); }
+catch { outcome = "expired"; }
+if (outcome === "confirmed") {
 await chrome.downloads.cancel(item.id);
-paused = false;
+paused = false; // The handoff now owns the transfer; do not resume the copy.
+} else if (outcome === "expired") {
+badge(false, "Flugel Download Manager: desktop did not confirm; restoring browser download");
+} else {
+badge(false, "Flugel Download Manager: desktop declined; restoring browser download");
+}
+} else {
+badge(false, "Flugel Download Manager: host unavailable or request rejected; restoring browser download");
 }
 } catch {
 badge(false, "Flugel Download Manager: interception failed; restoring browser download");
 } finally {
+await ledgerDrop(requestId).catch(() => {});
 if (paused) {
 try { await chrome.downloads.resume(item.id); }
 catch { badge(false, "Flugel Download Manager: resume the download from the browser download list"); }
 }
 }
-}
-// onCreated may precede the server/browser filename decision (e.g. Google Drive).
+}// onCreated may precede the server/browser filename decision (e.g. Google Drive).
 // Leave the browser's suggestion unchanged, then hand off its determined name.
 chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
 suggest();
 void interceptDownload(item);
 });
+
+// Reconcile handoffs whose worker died mid-confirmation; runs at least once a minute.
+try { chrome.alarms.create("fdm-reconcile", { periodInMinutes: 1, delayInMinutes: 1 }); } catch { /* alarms unavailable. */ }
+try {
+chrome.alarms.onAlarm.addListener(alarm => { if (alarm.name === "fdm-reconcile") void reconcileHandoffs(); });
+} catch { /* alarms unavailable. */ }
+try { chrome.runtime.onStartup.addListener(() => { void reconcileHandoffs(); }); } catch { /* onStartup unavailable. */ }
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {

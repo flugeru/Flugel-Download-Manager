@@ -20,7 +20,8 @@ public sealed class IpcMediaVariantDto
 public sealed class IpcRequestMessage
 {
     public int Version { get; set; } = 1;
-    public string Action { get; set; } = "enqueue"; // enqueue, activate, query-config
+    public string Action { get; set; } = "enqueue"; // enqueue, enqueue-media, activate, job-status, query-config
+    public string? RequestId { get; set; } // Correlation id minted by the extension; not a secret.
     public string? Url { get; set; }
     public string? FileName { get; set; }
     public string? Referrer { get; set; }
@@ -41,6 +42,8 @@ public sealed class IpcResponseMessage
     public string Status { get; set; } = "accepted-for-confirmation";
     public bool ForwardedToRunningInstance { get; set; } = true;
     public string? DownloadId { get; set; }
+    public string? RequestId { get; set; }
+    public string? JobId { get; set; }
     public bool BrowserAutoIntercept { get; set; } = true;
     public bool BrowserVideoBalloonEnabled { get; set; } = true;
     public string AutoCaptureExtensions { get; set; } = "";

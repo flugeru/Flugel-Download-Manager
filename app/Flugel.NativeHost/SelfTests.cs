@@ -92,7 +92,7 @@ internal static class SelfTests
                 Assert(info.ArgumentList.SequenceEqual(new[] { "--url", url }));
                 Assert(info.RedirectStandardOutput && info.RedirectStandardError && info.RedirectStandardInput);
             });
-            Check("multiple frames, confirmation-only reply, no URL echo", () =>
+            Check("multiple frames, launching reply, no URL echo", () =>
             {
                 using var input = new MemoryStream();
                 input.Write(Frame(Request("https://example.test/?secret=one")));
@@ -105,7 +105,7 @@ internal static class SelfTests
                 for (var i = 0; i < 2; i++)
                 {
                     using var reply = JsonDocument.Parse(Program.ReadFrame(output)!);
-                    Assert(reply.RootElement.GetProperty("status").GetString() == "accepted-for-confirmation");
+                    Assert(reply.RootElement.GetProperty("status").GetString() == "launching");
                     Assert(!reply.RootElement.TryGetProperty("url", out _));
                 }
                 Assert(output.Position == output.Length);
@@ -169,12 +169,42 @@ internal static class SelfTests
                 var request = Program.ParseStructuredRequest(body);
                 Assert(request.MediaQuality == "1080p" && request.SegmentUrls is null);
                 using var output = new MemoryStream();
-                Assert(Program.RunWithPayload(new MemoryStream(Frame(body)), output, req => req == request) == 0);
+                Assert(Program.RunWithPayload(new MemoryStream(Frame(body)), output,
+                    req => req == request ? Program.HandoffStatus.Launching : null) == 0);
                 output.Position = 0;
                 using var reply = JsonDocument.Parse(Program.ReadFrame(output)!);
-                Assert(reply.RootElement.GetProperty("status").GetString() == "accepted-for-confirmation");
+                Assert(reply.RootElement.GetProperty("status").GetString() == "launching");
                 Reject(() => Program.ParseStructuredRequest(Encoding.UTF8.GetBytes(
                     "{\"version\":1,\"action\":\"enqueue-media\",\"url\":\"https://example.test/video.mp4\",\"segmentUrls\":42}")));
+            });
+            Check("request id parsed, validated and relayed verbatim", () =>
+            {
+                const string id = "CAFEBABE-1234-4f8f-9Aee-000000000001";
+                byte[] With(string json) => Encoding.UTF8.GetBytes(json);
+                var enqueue = With(@"{""version"":1,""action"":""enqueue"",""url"":""https://example.test/a.mkv"",""requestId"":""" + id + @"""}");
+                Assert(Program.ParseStructuredRequest(enqueue).RequestId == id);
+
+                var jobStatus = With(@"{""version"":1,""action"":""job-status"",""requestId"":""" + id + @"""}");
+                Assert(Program.ParseStructuredRequest(jobStatus).RequestId == id);
+                using var outWaiting = new MemoryStream();
+                Assert(Program.RunWithPayload(new MemoryStream(Frame(enqueue)), outWaiting,
+                    _ => Program.HandoffStatus.Waiting) == 0);
+                outWaiting.Position = 0;
+                using var reply = JsonDocument.Parse(Program.ReadFrame(outWaiting)!);
+                Assert(reply.RootElement.GetProperty("status").GetString() == "waiting-user-confirmation");
+
+                using var outConfirmed = new MemoryStream();
+                Assert(Program.RunWithPayload(new MemoryStream(Frame(jobStatus)), outConfirmed,
+                    _ => Program.HandoffStatus.Confirmed) == 0);
+                outConfirmed.Position = 0;
+                using var confirmedReply = JsonDocument.Parse(Program.ReadFrame(outConfirmed)!);
+                Assert(confirmedReply.RootElement.GetProperty("status").GetString() == "confirmed");
+
+                foreach (var badId in new[] { "bad id", "bad;id", new string('x', 65), "", "a=b", "a\nb" })
+                    Reject(() => Program.ParseStructuredRequest(With(
+                        @"{""version"":1,""action"":""enqueue"",""url"":""https://example.test/a.mkv"",""requestId"":""" + badId + @"""}")));
+                Reject(() => Program.ParseStructuredRequest(With(
+                    @"{""version"":1,""action"":""job-status"",""requestId"":""" + id + @""",""url"":""https://example.test/""}")));
             });
             Check("busy desktop preserves rejection reason", () =>
             {

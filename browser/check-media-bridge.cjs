@@ -11,10 +11,14 @@ const downloadCalls = [];
 let pauseFails = false;
 let cancelFails = false;
 let nativeStatus = 'accepted-for-confirmation';
+let nativeReplies = []; // FIFO of statuses consumed one per sendNative call; empty falls back to nativeStatus.
 let listener;
 let nativeError;
 let storedFlags = {};
 let cookieJar = [];
+let uuidSeq = 0;
+let alarmHandler;
+const alarmsCreated = [];
 const session = {};
 const activeTab = { id: 7, url: 'https://nuvem.anitsu.moe/', title: 'Test' };
 const event = { addListener() {} };
@@ -24,6 +28,7 @@ const chrome = {
   contextMenus: { onClicked: event },
 tabs: { onRemoved: event, onUpdated: event, async query() { return [activeTab]; }, async get() { return activeTab; } },
 webRequest: { onBeforeRequest: event, onHeadersReceived: event, onBeforeSendHeaders: event },
+  alarms: { create: (name, info) => alarmsCreated.push({ name, info }), onAlarm: { addListener(fn) { alarmHandler = fn; } } },
   downloads: {
 onCreated: { addListener() { assert.fail('Do not capture before the browser determines the filename'); } },
 onDeterminingFilename: { addListener(fn) { determiningFilename = fn; } },
@@ -33,22 +38,34 @@ onDeterminingFilename: { addListener(fn) { determiningFilename = fn; } },
   },
   storage: {
     local: { async get(keys) { const out = {}; for (const k of keys) if (k in storedFlags) out[k] = storedFlags[k]; return out; } },
-    session: { async get(key) { return { [key]: session[key] }; }, async set(values) { Object.assign(session, values); }, async remove(key) { delete session[key]; } }
+    session: {
+      async get(key) {
+        if (key === null || key === undefined) return { ...session };
+        const keys = Array.isArray(key) ? key : [key];
+        const out = {}; for (const k of keys) if (k in session) out[k] = session[k]; return out;
+      },
+      async set(values) { Object.assign(session, values); }, async remove(key) { delete session[key]; }
+    }
   },
   cookies: { async getAll({ url }) { requests.push({ cookieLookup: url }); return cookieJar; } },
   runtime: {
     onInstalled: event,
+    onStartup: { addListener() {} },
     onMessage: { addListener(fn) { listener = fn; } },
     sendNativeMessage(host, request, callback) {
       assert.equal(host, 'com.flugel.downloadmanager');
       requests.push(request);
       chrome.runtime.lastError = nativeError ? { message: nativeError } : undefined;
-      callback({ version: 1, status: nativeStatus });
+      const status = nativeReplies.length ? nativeReplies.shift() : nativeStatus;
+      callback({ version: 1, status });
       chrome.runtime.lastError = undefined;
     }
   }
 };
-const context = vm.createContext({ chrome, TextEncoder, URL, decodeURIComponent, Number, Object, Map, Array, String, Date });
+const context = vm.createContext({
+  chrome, TextEncoder, URL, decodeURIComponent, Number, Object, Map, Array, String, Date,
+  setTimeout, clearTimeout, crypto: { randomUUID: () => 'req-' + (++uuidSeq).toString(36) }
+});
 vm.runInContext(fs.readFileSync(path.join(__dirname, 'extension/service-worker.js'), 'utf8'), context);
 
 const nuvem = 'https://nuvem.anitsu.moe/api/download?path=Animes%2FLetra%20Y%2FYoujo%20Senki%2F%5B2026%5D%20Youjo%20Senki%20II%2F%5BAnitsu%5D%20Youjo%20Senki%20S2%20-%20%5BWEB%20DUAL%201080p%20HEVC%5D%2F%5BAnitsu%5D%20Youjo%20Senki%20S2%20-%2008%20%5BWEB%20DUAL%201080p%20HEVC%5D.mkv';
@@ -130,51 +147,109 @@ assert.equal(session['media:7'].some(m => m.url === nuvem), true);
   assert.equal((await send({ url: 'https://example.test/video.mp4' })).error, 'host-forbidden');
   assert.equal((await send({ url: 'file:///C:/secret' })).error, 'invalid-url');
 
-  // Automatic takeover cancels only after acceptance and restores on host failure.
+  // Automatic takeover: pause immediately, cancel ONLY after the desktop durably confirms.
   const item = { id: 99, url: nuvem, referrer: activeTab.url, state: 'in_progress', filename: 'C:\\Downloads\\episode.mkv' };
   nativeError = undefined;
-storedFlags = { autoIntercept: true, 'cookies:anitsu.moe': true };
-context.observeRequest({ url: nuvem, method: 'GET' });
+  storedFlags = { autoIntercept: true, 'cookies:anitsu.moe': true };
+  vm.runInContext('HANDOFF_POLL_DELAY_MS = 1; HANDOFF_DEADLINE_MS = 60', context);
+  context.observeRequest({ url: nuvem, method: 'GET' });
   requests.length = 0;
   downloadCalls.length = 0;
+  nativeReplies = ['waiting-user-confirmation', 'confirmed'];
   await context.interceptDownload(item);
   assert.deepEqual(downloadCalls, [['pause', 99], ['cancel', 99]]);
-  assert.equal(requests.find(r => r.action).url, nuvem);
-assert.equal(requests.find(r => r.action).cookie, 'session=abc; lang=pt');
-// Final redirect URL and browser filename win; User-Agent comes only from observed headers.
-const finalUrl = 'https://cdn.example.test/download';
-context.observeRequest({ url: finalUrl, method: 'GET', requestHeaders: [{ name: 'User-Agent', value: 'BrowserTest/1.0' }] });
-requests.length = 0;
-await context.interceptDownload({ ...item, finalUrl, filename: 'C:\\Downloads\\server-name.zip' });
-assert.equal(requests.find(r => r.action).url, finalUrl);
-assert.equal(requests.find(r => r.action).fileName, 'server-name.zip');
-assert.equal(requests.find(r => r.action).userAgent, 'BrowserTest/1.0');
-// POST is not silently replayed as GET. Do not pause/cancel its original browser copy.
-context.observeRequest({ url: finalUrl, method: 'POST' });
-downloadCalls.length = 0;
-requests.length = 0;
-await context.interceptDownload({ ...item, finalUrl });
-assert.equal(downloadCalls.length, 0);
-assert.equal(requests.length, 0);
-context.observeRequest({ url: finalUrl, method: 'GET' });
-await context.interceptDownload({ ...item, finalUrl });
-assert.equal(downloadCalls.length, 0, 'mixed methods at one URL must not replay as GET');
-assert.equal((await send({ url: finalUrl })).error, 'unsupported-request-method');
-vm.runInContext('requestContext.clear()', context);
-downloadCalls.length = 0;
-await context.interceptDownload(item);
-assert.equal(downloadCalls.length, 0, 'unknown method after worker restart must remain in browser');
-context.observeRequest({ url: nuvem, method: 'GET' });
-nativeError = 'Specified native messaging host not found.';
+  const takeoverRequest = requests.find(r => r.action);
+  assert.equal(takeoverRequest.url, nuvem);
+  assert.equal(takeoverRequest.cookie, 'session=abc; lang=pt');
+  assert.equal(typeof takeoverRequest.requestId, 'string');
+  assert.equal(requests.filter(r => r.action === 'job-status').length, 1);
+  assert.equal(requests.find(r => r.action === 'job-status').requestId, takeoverRequest.requestId);
+  assert.equal(Object.keys(session).filter(key => key.startsWith('pending:')).length, 0, 'confirmed handoff must clear its ledger');
+
+  // Final redirect URL and browser filename win; User-Agent comes only from observed headers.
+  const finalUrl = 'https://cdn.example.test/download';
+  context.observeRequest({ url: finalUrl, method: 'GET', requestHeaders: [{ name: 'User-Agent', value: 'BrowserTest/1.0' }] });
+  requests.length = 0;
+  nativeReplies = ['waiting-user-confirmation', 'confirmed'];
+  downloadCalls.length = 0;
+  await context.interceptDownload({ ...item, finalUrl, filename: 'C:\\Downloads\\server-name.zip' });
+  assert.equal(requests.find(r => r.action === 'enqueue-media').url, finalUrl);
+  assert.equal(requests.find(r => r.action === 'enqueue-media').fileName, 'server-name.zip');
+  assert.equal(requests.find(r => r.action === 'enqueue-media').userAgent, 'BrowserTest/1.0');
+  assert.deepEqual(downloadCalls, [['pause', 99], ['cancel', 99]]);
+  // POST is not silently replayed as GET. Do not pause/cancel its original browser copy.
+  context.observeRequest({ url: finalUrl, method: 'POST' });
+  downloadCalls.length = 0;
+  requests.length = 0;
+  await context.interceptDownload({ ...item, finalUrl });
+  assert.equal(downloadCalls.length, 0);
+  assert.equal(requests.length, 0);
+  context.observeRequest({ url: finalUrl, method: 'GET' });
+  await context.interceptDownload({ ...item, finalUrl });
+  assert.equal(downloadCalls.length, 0, 'mixed methods at one URL must not replay as GET');
+  assert.equal((await send({ url: finalUrl })).error, 'unsupported-request-method');
+  vm.runInContext('requestContext.clear()', context);
+  downloadCalls.length = 0;
+  await context.interceptDownload(item);
+  assert.equal(downloadCalls.length, 0, 'unknown method after worker restart must remain in browser');
+  context.observeRequest({ url: nuvem, method: 'GET' });
+
+  // Closing/canceling the desktop dialog restores the browser copy instead of losing it.
+  requests.length = 0;
+  downloadCalls.length = 0;
+  nativeReplies = ['waiting-user-confirmation', 'rejected'];
+  await context.interceptDownload(item);
+  assert.deepEqual(downloadCalls, [['pause', 99], ['resume', 99]]);
+  assert.equal(requests.filter(r => r.action === 'job-status').length, 1);
+  assert.equal(Object.keys(session).filter(key => key.startsWith('pending:')).length, 0, 'rejected handoff must clear its ledger');
+
+  // A busy desktop is a rejection: resume without polling.
+  nativeReplies = ['desktop-busy'];
+  downloadCalls.length = 0;
+  requests.length = 0;
+  await context.interceptDownload(item);
+  assert.deepEqual(downloadCalls, [['pause', 99], ['resume', 99]]);
+  assert.equal(requests.filter(r => r.action === 'job-status').length, 0);
+
+  // An unreachable host also restores the copy.
+  nativeReplies = [];
+  nativeError = 'Specified native messaging host not found.';
   downloadCalls.length = 0;
   await context.interceptDownload(item);
   assert.deepEqual(downloadCalls, [['pause', 99], ['resume', 99]]);
   nativeError = undefined;
-  nativeStatus = 'desktop-busy';
+
+  // Desktop restarted without any record of the request: unknown-request restores the copy.
+  nativeReplies = ['waiting-user-confirmation', 'unknown-request'];
+  downloadCalls.length = 0;
+  requests.length = 0;
+  await context.interceptDownload(item);
+  assert.deepEqual(downloadCalls, [['pause', 99], ['resume', 99]]);
+
+  // No durable outcome before the deadline: restore the browser copy.
+  nativeReplies = [];
+  nativeStatus = 'waiting-user-confirmation';
   downloadCalls.length = 0;
   await context.interceptDownload(item);
   assert.deepEqual(downloadCalls, [['pause', 99], ['resume', 99]]);
   nativeStatus = 'accepted-for-confirmation';
+
+  // Reconciliation after worker death: aged ledger entries restore their own copies only.
+  downloadCalls.length = 0;
+  session['pending:aged'] = { downloadId: 1234, startedAt: Date.now() - 300000 };
+  session['pending:fresh'] = { downloadId: 5555, startedAt: Date.now() };
+  await vm.runInContext('reconcileHandoffs()', context);
+  assert.deepEqual(downloadCalls, [['resume', 1234]], 'only the aged entry restores its copy');
+  assert.equal('pending:aged' in session, false, 'aged entry must be cleared');
+  assert.equal('pending:fresh' in session, true, 'fresh in-flight handoff must be preserved');
+  assert.ok(alarmsCreated.some(a => a.name === 'fdm-reconcile'), 'periodic reconciliation alarm');
+  setTimeout(() => { if (alarmHandler) void alarmHandler({ name: 'fdm-reconcile' }); }, 0);
+  await new Promise(resolve => setTimeout(resolve, 10));
+  assert.deepEqual(downloadCalls, [['resume', 1234]]);
+  delete session['pending:fresh'];
+
+  // Cancel failure during takeover still restores the copy.
+  nativeReplies = ['waiting-user-confirmation', 'confirmed'];
   cancelFails = true;
   downloadCalls.length = 0;
   await context.interceptDownload(item);
@@ -198,6 +273,7 @@ nativeError = 'Specified native messaging host not found.';
     await context.interceptDownload({ ...item, ...extra });
     assert.equal(downloadCalls.length, 0);
   }
+  nativeReplies = [];
 
   if (process.argv[2]) {
     for (const request of requests.filter(r => r.action).slice(0, 2)) {
@@ -209,6 +285,14 @@ nativeError = 'Specified native messaging host not found.';
       const reply = JSON.parse(run.stdout.subarray(4, 4 + run.stdout.readUInt32LE(0)));
       assert.notEqual(reply.error, 'invalid-request');
     }
+    // Real host must accept a correlated job-status request and answer without parse errors.
+    const body = Buffer.from(JSON.stringify({ version: 1, action: 'job-status', requestId: 'fixture-status-0001' }));
+    const header = Buffer.alloc(4);
+    header.writeUInt32LE(body.length);
+    const run = spawnSync(process.argv[2], [], { input: Buffer.concat([header, body]), timeout: 8000 });
+    assert.ifError(run.error);
+    const reply = JSON.parse(run.stdout.subarray(4, 4 + run.stdout.readUInt32LE(0)));
+    assert.notEqual(reply.error, 'invalid-request');
   }
-console.log('PASS media naming, per-site cookies, popup submission, MV3 suspension, strict schema, automatic takeover and browser fallback');
+  console.log('PASS media naming, per-site cookies, popup submission, MV3 suspension, strict schema, durable-acceptance handoff and browser fallback');
 })().catch(error => { console.error(error); process.exitCode = 1; });

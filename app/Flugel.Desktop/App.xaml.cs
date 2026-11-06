@@ -24,7 +24,7 @@ public partial class App : Application
         {
             string? url = null, fileName = null, referrer = null, mediaQuality = null;
             List<string>? segmentUrls = null;
-            string? cookieHeader = null, pendingPath = null, userAgent = null;
+            string? cookieHeader = null, pendingPath = null, userAgent = null, pendingRequestId = null;
             string dataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Flugel Download Manager");
             bool explicitDirectory = false, smoke = false;
             for (int i = 0; i < e.Args.Length; i++)
@@ -83,6 +83,7 @@ public partial class App : Application
                     fileName = Str("FileName") ?? fileName;
                     referrer = Str("Referrer") ?? referrer;
                     mediaQuality = Str("MediaQuality") ?? mediaQuality;
+                    pendingRequestId = Str("RequestId");
                     cookieHeader = Str("CookieHeader");
                     userAgent = Str("UserAgent");
                     if (root.TryGetProperty("SegmentUrls", out var seg) && seg.ValueKind == System.Text.Json.JsonValueKind.Array)
@@ -95,14 +96,18 @@ public partial class App : Application
             }
 
             // Single instance: hand the request to the running app and exit quietly instead of failing on locked data.
-            if (!smoke && TryForwardToRunningInstance(dataDirectory, url, fileName, referrer, mediaQuality, segmentUrls, cookieHeader, userAgent))
+            if (!smoke && TryForwardToRunningInstance(dataDirectory, url, fileName, referrer, mediaQuality, segmentUrls, cookieHeader, userAgent, pendingRequestId))
             {
                 Shutdown(0);
                 return;
             }
+            // Correlated handoff: register before the window exists so a poll can see "waiting" at once.
+            if (pendingRequestId is not null && url is not null)
+                RegisterConfirmation(pendingRequestId);
+            pendingRequestId = SanitizeRequestId(pendingRequestId);
 
             var manager = new DownloadManager(dataDirectory);
-            var window = new MainWindow(manager, dataDirectory, url, fileName, referrer, mediaQuality, segmentUrls, smoke, cookieHeader, userAgent);
+            var window = new MainWindow(manager, dataDirectory, url, fileName, referrer, mediaQuality, segmentUrls, smoke, cookieHeader, userAgent, pendingRequestId);
             MainWin = window;
             MainWindow = window;
             window.Show();
@@ -135,14 +140,15 @@ public partial class App : Application
     }
 
     private static bool TryForwardToRunningInstance(string dataDirectory, string? url, string? fileName, string? referrer,
-        string? mediaQuality, List<string>? segmentUrls, string? cookieHeader, string? userAgent)
+        string? mediaQuality, List<string>? segmentUrls, string? cookieHeader, string? userAgent, string? requestId = null)
     {
         var request = url is null
             ? new IpcRequestMessage { Action = "activate" }
             : new IpcRequestMessage
             {
                 Action = "enqueue-media", Url = url, FileName = fileName, Referrer = referrer,
-                MediaQuality = mediaQuality, SegmentUrls = segmentUrls, CookieHeader = cookieHeader, UserAgent = userAgent
+                MediaQuality = mediaQuality, SegmentUrls = segmentUrls, CookieHeader = cookieHeader, UserAgent = userAgent,
+                RequestId = requestId
             };
         // Any reply, including "desktop-busy", means a running instance owns the request; do not start a second app.
         var reply = SingleInstanceIpc.TrySendAsync(dataDirectory, request, 1500).GetAwaiter().GetResult();
@@ -158,6 +164,7 @@ public partial class App : Application
             {
                 Status = "accepted-for-confirmation",
                 ForwardedToRunningInstance = true,
+                RequestId = req.RequestId,
                 BrowserAutoIntercept = settings?.BrowserAutoIntercept ?? true,
                 BrowserVideoBalloonEnabled = settings?.BrowserVideoBalloonEnabled ?? true,
                 AutoCaptureExtensions = settings?.AutoCaptureExtensions ?? "",
@@ -166,6 +173,16 @@ public partial class App : Application
             if (req.Action == "activate")
             {
                 ShowAndActivate();
+                return resp;
+            }
+            if (req.Action == "job-status")
+            {
+                if (req.RequestId != SanitizeRequestId(req.RequestId))
+                {
+                    resp.Status = "invalid-request";
+                    return resp;
+                }
+                (resp.Status, resp.JobId) = QueryConfirmation(req.RequestId!);
                 return resp;
             }
             if (req.Action == "enqueue" || req.Action == "enqueue-media")
@@ -191,6 +208,16 @@ public partial class App : Application
                     UserAgent = req.UserAgent,
                     StartImmediately = true
                 }) == true;
+                if (req.RequestId is { } rid)
+                {
+                    if (rid != SanitizeRequestId(rid))
+                    {
+                        resp.Status = "invalid-request";
+                        return resp;
+                    }
+                    RegisterConfirmation(rid);
+                    if (accepted) resp.Status = "waiting-user-confirmation";
+                }
                 if (!accepted) resp.Status = "desktop-busy";
             }
             return resp;
@@ -204,6 +231,58 @@ public partial class App : Application
         MainWin.Show();
         MainWin.Activate();
         if (MainWin.Topmost) { MainWin.Topmost = false; MainWin.Topmost = true; }
+    }
+
+    // P0 durable-acceptance ledger: the extension pauses a browser copy and waits for an
+    // explicit outcome before canceling. "confirmed" requires a persisted job (or this map),
+    // "rejected" restores the browser copy, and absence after the deadline restores it too.
+    private readonly object _confirmationGate = new();
+    private readonly Dictionary<string, (string State, string? JobId, DateTime AddedAt)> _confirmations = new(StringComparer.Ordinal);
+
+    private static string? SanitizeRequestId(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        value = value.Trim();
+        return value.Length <= 64 && value.All(c => char.IsAsciiLetterOrDigit(c) || c == '-') ? value : null;
+    }
+
+    internal void RegisterConfirmation(string requestId)
+    {
+        lock (_confirmationGate)
+        {
+            var cutoff = DateTime.UtcNow.AddMinutes(-10);
+            foreach (var expired in _confirmations.Where(kv => kv.Value.AddedAt < cutoff).Select(kv => kv.Key).ToList())
+                _confirmations.Remove(expired);
+            if (_confirmations.TryGetValue(requestId, out var entry) && entry.State is "confirmed" or "rejected") return; // Final outcomes are kept.
+            _confirmations[requestId] = ("waiting-user-confirmation", null, DateTime.UtcNow);
+        }
+    }
+
+    internal void CompleteConfirmation(string requestId, string? jobId)
+    {
+        if (SanitizeRequestId(requestId) is null) return;
+        lock (_confirmationGate)
+        {
+            _confirmations[requestId] = (jobId is null ? "rejected" : "confirmed", jobId, DateTime.UtcNow);
+        }
+    }
+
+    internal (string Status, string? JobId) QueryConfirmation(string requestId)
+    {
+        lock (_confirmationGate)
+        {
+            if (_confirmations.TryGetValue(requestId, out var entry))
+                return entry.State switch
+                {
+                    "confirmed" => ("confirmed", entry.JobId),
+                    "rejected" => ("rejected", null),
+                    _ => ("waiting-user-confirmation", null)
+                };
+        }
+        // Durable answer: a persisted job proves the user accepted, even after an app restart.
+        if (MainWin?.Manager is { } manager && manager.TryGetJobByRequestId(requestId, out var persistedJobId))
+            return ("confirmed", persistedJobId);
+        return ("unknown-request", null);
     }
 
     internal static Uri ValidateUrl(string value)

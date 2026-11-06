@@ -19,7 +19,8 @@ internal sealed record ParsedHostRequest(
     string? MediaQuality = null,
     IReadOnlyList<string>? SegmentUrls = null,
     string? CookieHeader = null,
-    string? UserAgent = null);
+    string? UserAgent = null,
+    string? RequestId = null);
 
 internal static class Program
 {
@@ -51,10 +52,22 @@ internal static class Program
         }
     }
 
+    // Legacy convenience used by older checks: a launch result maps to the neutral "launching" status.
     internal static int Run(Stream input, Stream output, Func<string, bool> launch) =>
-        RunWithPayload(input, output, req => launch(req.Url));
+        RunWithPayload(input, output, req => launch(req.Url) ? HandoffStatus.Launching : null);
 
-    internal static int RunWithPayload(Stream input, Stream output, Func<ParsedHostRequest, bool> launch)
+    // Handoff statuses relayed verbatim to the extension. It cancels the paused browser copy
+    // only on "confirmed"; "rejected"/"unknown-request" (and deadline expiry) restore the copy.
+    internal static class HandoffStatus
+    {
+        internal const string Launching = "launching";
+        internal const string Waiting = "waiting-user-confirmation";
+        internal const string Confirmed = "confirmed";
+        internal const string RejectedStatus = "rejected";
+        internal const string Unknown = "unknown-request";
+    }
+
+    internal static int RunWithPayload(Stream input, Stream output, Func<ParsedHostRequest, string?> launch)
     {
         while (true)
         {
@@ -89,20 +102,20 @@ internal static class Program
                 continue;
             }
 
-            bool accepted;
-            try { accepted = launch(req); }
+            string? status;
+            try { status = launch(req); }
             catch (DesktopRejection error)
             {
                 Reply(output, "rejected", error.Code);
                 continue;
             }
-            if (!accepted)
+            if (status is null)
             {
                 Reply(output, "rejected", "desktop-unavailable");
                 continue;
             }
 
-            Reply(output, "accepted-for-confirmation");
+            Reply(output, status);
         }
     }
 
@@ -155,6 +168,7 @@ internal static class Program
             List<string>? segmentUrls = null;
             string? cookie = null;
             string? userAgent = null;
+            string? requestId = null;
 
             foreach (var property in document.RootElement.EnumerateObject())
             {
@@ -167,8 +181,13 @@ internal static class Program
                         break;
                     case "action" when property.Value.ValueKind == JsonValueKind.String:
                         action = property.Value.GetString();
-                        if (action is not ("enqueue" or "enqueue-media" or "ping"))
+                        if (action is not ("enqueue" or "enqueue-media" or "ping" or "job-status"))
                             throw new InvalidDataException("Unsupported action.");
+                        break;
+                    case "requestId" when property.Value.ValueKind == JsonValueKind.String:
+                        requestId = property.Value.GetString();
+                        if (requestId is null || !ValidRequestId(requestId))
+                            throw new InvalidDataException("Invalid request id.");
                         break;
                     case "url" when property.Value.ValueKind == JsonValueKind.String:
                         url = property.Value.GetString();
@@ -201,7 +220,7 @@ internal static class Program
                         userAgent = property.Value.GetString();
                         break;
                     // Accept older extension payloads with explicitly null optional metadata.
-                    case "fileName" or "referrer" or "pageTitle" or "mediaQuality" or "segmentUrls" or "cookie" or "userAgent"
+                    case "requestId" or "fileName" or "referrer" or "pageTitle" or "mediaQuality" or "segmentUrls" or "cookie" or "userAgent"
                         when property.Value.ValueKind == JsonValueKind.Null:
                         break;
                     default:
@@ -218,14 +237,23 @@ internal static class Program
                 return new ParsedHostRequest("ping", "https://localhost/");
             }
 
-            if (action == "enqueue")
+            if (action == "job-status")
             {
-                if (seen.Count != 3 || url is null || !ValidUrl(url))
-                    throw new InvalidDataException("Invalid URL or extra/missing field.");
-                return new ParsedHostRequest("enqueue", url);
+                // Exactly {version, action, requestId}: the extension polls a single handoff.
+                if (seen.Count != 3 || requestId is null)
+                    throw new InvalidDataException("Invalid job-status fields.");
+                return new ParsedHostRequest("job-status", "https://localhost/", RequestId: requestId);
             }
 
-            // enqueue-media allows optional metadata fields
+            if (action == "enqueue")
+            {
+                bool withId = seen.Contains("requestId");
+                if (seen.Count != (withId ? 4 : 3) || url is null || !ValidUrl(url))
+                    throw new InvalidDataException("Invalid URL or extra/missing field.");
+                return new ParsedHostRequest("enqueue", url, RequestId: requestId);
+            }
+
+            // enqueue-media allows optional metadata fields (including requestId)
             if (url is null || !ValidUrl(url))
                 throw new InvalidDataException("Invalid URL.");
             if (referrer is not null && referrer.Length > 0 && !ValidUrl(referrer))
@@ -236,7 +264,7 @@ internal static class Program
             if (userAgent is not null && (userAgent.Length is < 1 or > 2048 || userAgent.Any(char.IsControl)))
                 throw new InvalidDataException("Invalid user agent.");
 
-            return new ParsedHostRequest(action, url, fileName, referrer, pageTitle, mediaQuality, segmentUrls, cookie, userAgent);
+            return new ParsedHostRequest(action, url, fileName, referrer, pageTitle, mediaQuality, segmentUrls, cookie, userAgent, requestId);
         }
         catch (Exception error) when (error is JsonException or DecoderFallbackException or
                                       ArgumentException or InvalidOperationException)
@@ -248,6 +276,11 @@ internal static class Program
     internal static bool ValidCookieHeader(string value) =>
         value.Length is > 0 and <= 8192 && value.Contains('=') &&
         !value.Any(c => char.IsControl(c));
+
+    // Extension correlation id: UUID-ish, printable, bounded. Not a secret; carried to the desktop
+    // via the IPC payload or the temporary pending file so a future poll can resolve the outcome.
+    internal static bool ValidRequestId(string value) =>
+        value.Length is > 0 and <= 64 && value.All(c => char.IsAsciiLetterOrDigit(c) || c == '-');
 
     private static bool ValidUrl(string value)
     {
@@ -311,9 +344,10 @@ internal static class Program
     }
 
     internal static bool TryForwardToRunningInstance(ParsedHostRequest req, string dataDirectory) =>
-        ForwardToRunningInstance(req, dataDirectory) == "accepted-for-confirmation";
+        ForwardedStatus(req, dataDirectory) is not null;
 
-    private static string? ForwardToRunningInstance(ParsedHostRequest req, string dataDirectory)
+    // Relays the desktop's own status (null when no instance could be reached).
+    private static string? ForwardedStatus(ParsedHostRequest req, string dataDirectory)
     {
         try
         {
@@ -324,6 +358,7 @@ internal static class Program
             {
                 Version = 1,
                 Action = req.Action,
+                req.RequestId,
                 req.Url,
                 req.FileName,
                 req.Referrer,
@@ -339,9 +374,11 @@ internal static class Program
             using var reader = new StreamReader(client, Encoding.UTF8, false, 4096, leaveOpen: true);
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(3));
             string? line = reader.ReadLineAsync(timeout.Token).AsTask().GetAwaiter().GetResult();
-            if (string.IsNullOrWhiteSpace(line)) return "desktop-unavailable";
+            if (string.IsNullOrWhiteSpace(line)) return null;
             using var doc = JsonDocument.Parse(line);
-            return doc.RootElement.TryGetProperty("Status", out var status) ? status.GetString() : "desktop-unavailable";
+            return doc.RootElement.TryGetProperty("Status", out var status) && status.GetString() is { } value
+                ? value
+                : null;
         }
         catch
         {
@@ -349,22 +386,30 @@ internal static class Program
         }
     }
 
-    private static bool ForwardOrLaunchDesktop(ParsedHostRequest req, string? testDirectory = null)
+    // Returns the status the extension receives; null means the desktop could not take the request.
+    private static string? ForwardOrLaunchDesktop(ParsedHostRequest req, string? testDirectory = null)
     {
         string effectiveDataDir = testDirectory ??
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Flugel Download Manager");
 
         // 1. If a Flugel Download Manager instance is already running for this data directory, forward via same-user Named Pipe IPC!
-        var forwarded = ForwardToRunningInstance(req, effectiveDataDir);
-        if (forwarded == "accepted-for-confirmation") return true;
+        var forwarded = ForwardedStatus(req, effectiveDataDir);
         if (forwarded is not null)
-            throw new DesktopRejection(forwarded is "desktop-busy" or "invalid-request" ? forwarded : "desktop-unavailable");
+        {
+            return forwarded switch
+            {
+                "desktop-busy" or "invalid-request" => throw new DesktopRejection(forwarded),
+                // Anything else is relayed verbatim: waiting-user-confirmation, confirmed,
+                // rejected, unknown-request, or a legacy accepted-for-confirmation reply.
+                _ => forwarded
+            };
+        }
 
         // 2. Otherwise launch FlugelDownloadManager.exe
         var executable = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,
             "..", "Flugel.Desktop", "FlugelDownloadManager.exe"));
         if (!File.Exists(executable))
-            return false;
+            return null;
         try
         {
             if (OperatingSystem.IsWindows())
@@ -378,14 +423,16 @@ internal static class Program
                 }
             }
             var start = DesktopStartInfo(executable, req.Url, req);
-            if (req.CookieHeader is not null || req.UserAgent is not null)
+            bool hasCorrelation = req.RequestId is not null;
+            if (req.CookieHeader is not null || req.UserAgent is not null || hasCorrelation)
             {
                 // Cookies never go on the command line (visible to other processes); the desktop deletes this file after reading.
+                // The correlation id rides in the same file so the desktop can answer "job-status" polls.
                 Directory.CreateDirectory(effectiveDataDir);
                 string pending = Path.Combine(effectiveDataDir, $"pending-request-{Guid.NewGuid():N}.json");
                 File.WriteAllText(pending, JsonSerializer.Serialize(new
                 {
-                    req.Url, req.FileName, req.Referrer, req.PageTitle, req.MediaQuality,
+                    req.RequestId, req.Url, req.FileName, req.Referrer, req.PageTitle, req.MediaQuality,
                     req.SegmentUrls, req.CookieHeader, req.UserAgent
                 }), Encoding.UTF8);
                 start.ArgumentList.Add("--pending-request");
@@ -406,16 +453,16 @@ internal static class Program
             }
             using var process = Process.Start(start);
             if (process is null)
-                return false;
+                return null;
             process.StandardInput.Close();
             process.StandardOutput.Close();
             process.StandardError.Close();
-            return true;
+            return HandoffStatus.Launching;
         }
         catch (Exception error) when (error is Win32Exception or IOException or
                                       UnauthorizedAccessException or InvalidOperationException)
         {
-            return false;
+            return null;
         }
     }
 

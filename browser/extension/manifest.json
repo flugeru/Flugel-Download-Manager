@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Flugel Download Manager",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "description": "Send links and detected media to Flugel Download Manager for user-confirmed download. Respects browser permissions; protected streams are never bypassed.",
 "permissions": ["contextMenus", "nativeMessaging", "storage", "scripting", "activeTab", "tabs", "webRequest", "cookies", "downloads"],
   "host_permissions": ["<all_urls>"],

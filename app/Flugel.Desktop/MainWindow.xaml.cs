@@ -44,7 +44,8 @@ public partial class MainWindow : Window
     internal DownloadManager Manager => _manager;
 
     internal MainWindow(DownloadManager manager, string dataDirectory, string? initialUrl, string? initialFileName,
-        string? initialReferrer, string? initialMediaQuality, List<string>? initialSegments, bool smoke, string? initialCookie = null, string? initialUserAgent = null)
+        string? initialReferrer, string? initialMediaQuality, List<string>? initialSegments, bool smoke,
+        string? initialCookie = null, string? initialUserAgent = null, string? initialRequestId = null)
     {
         _manager = manager;
         _view = CollectionViewSource.GetDefaultView(_rows);
@@ -70,9 +71,10 @@ public partial class MainWindow : Window
                     Referrer = initialReferrer,
                     MediaQualityLabel = initialMediaQuality,
                     MediaSegmentUrls = initialSegments,
-                CookieHeader = initialCookie,
-                UserAgent = initialUserAgent,
-StartImmediately = true
+                    CookieHeader = initialCookie,
+                    UserAgent = initialUserAgent,
+                    RequestId = initialRequestId,
+                    StartImmediately = true
                 });
         };
     }
@@ -379,6 +381,8 @@ StartImmediately = true
             var dialog = new AddDialog(_manager, options) { Owner = this };
             dialog.ShowDialog();
             RefreshSnapshots();
+            if (options?.RequestId is { } requestId)
+                App.Instance.CompleteConfirmation(requestId, dialog.AddedId);
             if (dialog.AddedId is { } id)
             {
                 var row = _rows.FirstOrDefault(item => item.Value.Id == id);
